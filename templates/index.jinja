@@ -1,13 +1,25 @@
-<html>
+<html ng-app>
 	<head>
-		<script type="text/javascript" src="/static/js/jquery.js" /></script>
-		<script type="text/javascript" src="/static/js/underscore.js" /></script>
-		<script type="text/javascript" src="/static/js/backbone.js" /></script>
-		<script type="text/javascript" src="/static/js/marionette.js" /></script>
+		<script type="text/javascript" src="/static/js/angular.js" /></script>
+		<script type="text/javascript" src="/static/js/angular.resource.js" /></script>
 		<script type="text/javascript" src="/static/js/index.js" /></script>
 		<link rel="stylesheet" type="text/css" href="/static/css/index.css" />
 	</head>
 	<body>
-		Hello world
+		<h2>Statements</h2>
+		<div ng-controller="StatementCtrl">
+			<ul>
+				<li ng-repeat="statement in statements">
+					{% raw %}
+						<span>{{statement.text}}</span>
+					{% endraw %}
+				</li>
+			</ul>
+			<form ng-submit="addStatement()">
+				<input type="text" ng-model="statementText"  size="30"
+				placeholder="add new todo here">
+				<input class="btn-primary" type="submit" value="add">
+			</form>
+		</div>
 	</body>
 </html>
