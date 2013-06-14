@@ -8,11 +8,21 @@ $(function(){
 
     App.module("Models", function(Models, App, Backbone, Marionette, $, _){
 
-    	Models.Statement = Backbone.Model.extend({});
+        Models.StatementNode = Backbone.Model.extend({});
 
-    	Models.Statements = Backbone.Collection.extend({
-    		model: Models.Statement
-    	});
+        Models.StatementNodes = Backbone.Collection.extend({
+            model: Models.StatementNode
+        });
+
+        Models.Statement = Backbone.Model.extend({
+            defaults: {
+                nodes: new Models.StatementNodes()
+            }
+        });
+
+        Models.Statements = Backbone.Collection.extend({
+            model: Models.Statement
+        });
     });
 
     App.module("Singletons", function(Singletons, App, Backbone, Marionette, $, _){
@@ -21,7 +31,8 @@ $(function(){
 
     App.module("Views", function(Views, App, Backbone, Marionette, $, _){
     	Views.Statement = Backbone.Marionette.ItemView.extend({
-    		template: "#statement-tmpl"
+    		template: "#statement-tmpl",
+            className: "statement"
     	});
 
     	Views.Statements = Backbone.Marionette.CollectionView.extend({
@@ -30,10 +41,16 @@ $(function(){
     });
 
     App.addInitializer(function(options){
-    	App.Singletons.Statements.push(new App.Models.Statement());
-        App.Singletons.Statements.push(new App.Models.Statement());
-        App.Singletons.Statements.push(new App.Models.Statement());
-        App.Singletons.Statements.push(new App.Models.Statement());
+        var nodes = new App.Models.StatementNodes();
+
+        nodes.push(new App.Models.StatementNode());
+        nodes.push(new App.Models.StatementNode());
+        nodes.push(new App.Models.StatementNode());
+
+    	App.Singletons.Statements.push(new App.Models.Statement({
+            nodes: nodes
+        }));
+
     	var v = new App.Views.Statements({
     		collection: App.Singletons.Statements
     	});

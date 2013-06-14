@@ -14,7 +14,11 @@
 		</div>
 
 		<script type="text/html" id="statement-tmpl">
-			statement
+			<ul class="node">
+				<% nodes.each(function(node){ %>
+					<li class="node">node</li>
+				<% }); %>
+			</ul>
 		</script>
 	</body>
 </html>
