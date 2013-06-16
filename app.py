@@ -1,4 +1,5 @@
 import os
+import sys
 from flask import Flask, render_template, request, jsonify
 
 app = Flask(__name__)
@@ -14,6 +15,7 @@ def execute():
 
     python_code = ""
     stdout = ""
+    errors = []
 
     for statement in statements:
         type = statement['type']
@@ -25,10 +27,14 @@ def execute():
                 python_code += "stdout += str(" + nodes[1]['value'] + ")\n"
 
     print "Python code:\n " + python_code
-    exec python_code
+    try:
+        exec python_code
+    except:
+        errors.append(str(sys.exc_info()[0]) + ": " + str(sys.exc_info()[1]))
     print "stdout: " + stdout
+    print "errors: " + "\n".join(errors)
 
-    return jsonify(success=True, stdout=stdout, errors=[])
+    return jsonify(success=True, stdout=stdout, errors=errors)
 
 if __name__ == "__main__":
     app.run(debug=True)
