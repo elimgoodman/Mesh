@@ -11,7 +11,24 @@ def index():
 def execute():
     statements = request.json['statements']
     print statements
-    return jsonify(success=True, stdout="mock result", errors=[])
+
+    python_code = ""
+    stdout = ""
+
+    for statement in statements:
+        type = statement['type']
+        nodes = statement['nodes']
+        if type == 'DEFINE':
+            python_code += nodes[0]['value'] + " = " + nodes[1]['value'] + "\n"
+        elif type == 'MUTATE':
+            if nodes[0]['value'] == "print":
+                python_code += "stdout += str(" + nodes[1]['value'] + ")\n"
+
+    print "Python code:\n " + python_code
+    exec python_code
+    print "stdout: " + stdout
+
+    return jsonify(success=True, stdout=stdout, errors=[])
 
 if __name__ == "__main__":
     app.run(debug=True)
