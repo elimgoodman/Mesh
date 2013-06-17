@@ -13,13 +13,24 @@
 	<body>
 		<div>
 			<ul id="statements"></ul>
-            
+
+			<ul id="new-statement-links">
+				<li><a href="#" id="new-define-statement">New Define Statement</a></li>
+				<li><a href="#" id="new-mutate-statement">New Mutate Statement</a></li>
+			</ul>
             <a id="execute-link" href='#'>Execute</a>
             <div id="stdout"></div>
 		</div>
 
-		<script type="text/html" id="statement-tmpl">
-			<span><%= type %></span><ul class="nodes"></ul>
+		<script type="text/html" id="define-statement-tmpl">
+			DEFINE: <%= symbol.value %> = <%= value.value %>
+		</script>
+
+		<script type="text/html" id="mutate-statement-tmpl">
+			MUTATE: <%= symbol.value %>
+			<% _.each(params, function(param){ %>
+				<%= param.value %>
+			<% }); %>
 		</script>
 
 		<script type="text/html" id="statement-node-tmpl">

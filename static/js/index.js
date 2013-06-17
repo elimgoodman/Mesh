@@ -51,12 +51,42 @@ $(function(){
 
         Models.Statement = Backbone.RelationalModel.extend({
             defaults: {
-                nodes: new Models.StatementNodes(),
                 type: null
+            }
+        });
+
+        Models.DefineStatement = Models.Statement.extend({
+            defaults: {
+                symbol: null,
+                value: null,
+                type: App.Constants.StatementTypes.DEFINE,
             },
             relations: [{
+                type: Backbone.HasOne,
+                key: 'symbol',
+                relatedModel: Models.StatementNode
+            },
+            {
+                type: Backbone.HasOne,
+                key: 'value',
+                relatedModel: Models.StatementNode
+            }]
+        });
+
+        Models.MutateStatement = Models.Statement.extend({
+            defaults: {
+                symbol: null,
+                params: new App.Models.StatementNodes(),
+                type: App.Constants.StatementTypes.MUTATE
+            },
+            relations: [{
+                type: Backbone.HasOne,
+                key: 'symbol',
+                relatedModel: Models.StatementNode
+            },
+            {
                 type: Backbone.HasMany,
-                key: 'nodes',
+                key: 'params',
                 relatedModel: Models.StatementNode
             }]
         });
@@ -77,6 +107,20 @@ $(function(){
     });
 
     App.module("SingletonViews", function(SingletonViews, App, Backbone, Marionette, $, _){
+        SingletonViews.NewStatementLinks = Backbone.View.extend({
+            el: "#new-statement-links",
+            events: {
+                'click #new-define-statement': 'makeNewDefineStatement',
+                'click #new-mutate-statement': 'makeNewMutateStatement'
+            },
+            makeNewMutateStatement: function() {
+
+            },
+            makeNewDefineStatement: function() {
+
+            }
+        });
+
         SingletonViews.ExecuteLink = Backbone.View.extend({
             el: "#execute-link",
             events: {
@@ -110,14 +154,22 @@ $(function(){
             className: 'statement-node'
         });
 
-        Views.Statement = Backbone.Marionette.CompositeView.extend({
-            template: "#statement-tmpl",
-            className: "statement",
-            itemViewContainer: ".nodes",
-            itemView: Views.StatementNode,
-            initialize: function() {
-                this.collection = this.model.get('nodes');
+        Views.Statement = Backbone.Marionette.ItemView.extend({
+            template: function(model) {
+                var selector;
+                switch(model.type) {
+                    case App.Constants.StatementTypes.MUTATE:
+                        selector = "#mutate-statement-tmpl";
+                        break;
+                    case App.Constants.StatementTypes.DEFINE:
+                        selector = "#define-statement-tmpl";
+                        break;
+                    default: throw "No template";
+                }
+
+                return _.template($(selector).html(), model);
             },
+            className: "statement"
         });
 
         Views.Statements = Backbone.Marionette.CollectionView.extend({
@@ -130,37 +182,29 @@ $(function(){
     });
 
     var createTestData = function() {
-        var nodes = new App.Models.StatementNodes();
 
-        nodes.push(new App.Models.StatementNode({
-            type: App.Constants.NodeTypes.SYMBOL,
-            value: "a"
-        }));
-        nodes.push(new App.Models.StatementNode({
-            type: App.Constants.NodeTypes.INT,
-            value: "1"
-        }));
-
-        var print_nodes = new App.Models.StatementNodes();
-
-        print_nodes.push(new App.Models.StatementNode({
-            type: App.Constants.NodeTypes.SYMBOL,
-            value: "print"
+        App.Singletons.Statements.push(new App.Models.DefineStatement({
+            symbol: new App.Models.StatementNode({
+                type: App.Constants.NodeTypes.SYMBOL,
+                value: "a"
+            }),
+            value: new App.Models.StatementNode({
+                type: App.Constants.NodeTypes.INT,
+                value: "1"
+            })
         }));
 
-        print_nodes.push(new App.Models.StatementNode({
-            type: App.Constants.NodeTypes.SYMBOL,
-            value: "a"
-        }));
-
-        App.Singletons.Statements.push(new App.Models.Statement({
-            type: App.Constants.StatementTypes.DEFINE,
-            nodes: nodes
-        }));
-
-        App.Singletons.Statements.push(new App.Models.Statement({
-            type: App.Constants.StatementTypes.MUTATE,
-            nodes: print_nodes
+        App.Singletons.Statements.push(new App.Models.MutateStatement({
+            symbol: new App.Models.StatementNode({
+                type: App.Constants.NodeTypes.SYMBOL,
+                value: "print"
+            }),
+            params: new App.Models.StatementNodes([
+                {
+                    type: App.Constants.NodeTypes.SYMBOL,
+                    value: "a"
+                }
+            ])
         }));
     }
 
@@ -172,6 +216,7 @@ $(function(){
         });
 
         new App.SingletonViews.ExecuteLink();
+        new App.SingletonViews.NewStatementLinks();
 
         App.statements.show(v);
     });
