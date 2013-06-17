@@ -57,8 +57,14 @@ $(function(){
 
         Models.DefineStatement = Models.Statement.extend({
             defaults: {
-                symbol: null,
-                value: null,
+                symbol: new App.Models.StatementNode({
+                    type: App.Constants.NodeTypes.SYMBOL
+                }),
+                value: new App.Models.StatementNode({
+                    //FIXME: this isn't gonna work in the long run
+                    //It needs to be something like "EXPR"
+                    type: App.Constants.NodeTypes.INT
+                }),
                 type: App.Constants.StatementTypes.DEFINE,
             },
             relations: [{
@@ -75,7 +81,7 @@ $(function(){
 
         Models.MutateStatement = Models.Statement.extend({
             defaults: {
-                symbol: null,
+                symbol: new App.Models.StatementNode(),
                 params: new App.Models.StatementNodes(),
                 type: App.Constants.StatementTypes.MUTATE
             },
@@ -111,13 +117,25 @@ $(function(){
             el: "#new-statement-links",
             events: {
                 'click #new-define-statement': 'makeNewDefineStatement',
-                'click #new-mutate-statement': 'makeNewMutateStatement'
+                'click #new-print-statement': 'makeNewPrintStatement'
             },
-            makeNewMutateStatement: function() {
-
+            makeNewPrintStatement: function() {
+                var s = new App.Models.MutateStatement({
+                    symbol: new App.Models.StatementNode({
+                        type: App.Constants.NodeTypes.SYMBOL,
+                        value: "print"
+                    }),
+                    params: new App.Models.StatementNodes([{
+                        //FIXME: this ain't right
+                        type: App.Constants.NodeTypes.SYMBOL,
+                        value: ""
+                    }])
+                });
+                App.Singletons.Statements.push(s);
             },
             makeNewDefineStatement: function() {
-
+                var s = new App.Models.DefineStatement();
+                App.Singletons.Statements.push(s);
             }
         });
 
@@ -150,8 +168,20 @@ $(function(){
 
         Views.StatementNode = Backbone.Marionette.ItemView.extend({
             template: "#statement-node-tmpl",
-            tagName: 'li',
-            className: 'statement-node'
+            tagName: 'span',
+            className: 'statement-node',
+            events: {
+                'keyup': 'recordChange'
+            },
+            recordChange: function(e) {
+                var val = $(e.target).val();
+
+                this.model.set({
+                    value: val
+                }, {
+                    silent: true
+                });
+            }
         });
 
         Views.Statement = Backbone.Marionette.ItemView.extend({
@@ -169,11 +199,35 @@ $(function(){
 
                 return _.template($(selector).html(), model);
             },
-            className: "statement"
+            className: "statement",
+            tagName: "li",
+            onRender: function() {
+                //FIXME: this feels INSANELY hacky
+                var self = this;
+                this.$(".node").each(function(){
+                    var field_name = $(this).data('field');
+                    var field = self.model.get(field_name);
+
+                    if($(this).data('many')) {
+                        var v = new App.Views.StatementNodes({collection: field});
+                    } else {
+                        var v = new App.Views.StatementNode({model: field});
+                    }
+                    $(this).html(v.render().el);
+                });
+            }
         });
 
         Views.Statements = Backbone.Marionette.CollectionView.extend({
-            itemView: Views.Statement
+            itemView: Views.Statement,
+            className: 'statements',
+            tagName: 'ul'
+        });
+
+        Views.StatementNodes = Backbone.Marionette.CollectionView.extend({
+            itemView: Views.StatementNode,
+            className: 'statement-nodes',
+            tagName: 'ul'
         });
 
         Views.Result = Backbone.Marionette.ItemView.extend({
