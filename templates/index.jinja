@@ -5,6 +5,7 @@
 		<script type="text/javascript" src="/static/js/backbone.js" /></script>
 		<script type="text/javascript" src="/static/js/backbone.relational.js" /></script>
 		<script type="text/javascript" src="/static/js/marionette.js" /></script>
+		<script type="text/javascript" src="/static/js/mousetrap.js" /></script>
 		<script type="text/javascript" src="/static/js/index.js" /></script>
 
 		<link rel="stylesheet/less" type="text/css" href="/static/css/index.less" />
@@ -24,7 +25,7 @@
 
 		<script type="text/html" id="define-statement-tmpl">
 			DEFINE
-			<span class="node" data-field="symbol" /> as
+			<span class="node" data-field="symbol" />
 			<span class="node" data-field="value" />
 		</script>
 
@@ -35,7 +36,7 @@
 		</script>
 
 		<script type="text/html" id="statement-node-tmpl">
-			<input value="<%= value %>" />
+			<span><%= value %></span>
 		</script>
 
 		<script type="text/html" id="result-tmpl">

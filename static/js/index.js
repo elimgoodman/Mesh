@@ -20,6 +20,106 @@ $(function(){
         }
     });
 
+    App.module("Controllers", function(Controllers, App, Backbone, Marionette, $, _){
+        var SelectionKeeper = function (postchange) {
+            this.selected = null;
+            this.postchange = postchange;
+        };
+
+        _.extend(SelectionKeeper.prototype, Backbone.Events, {
+            set: function (selected) {
+                if(this.selected) {
+                    this.selected.set({
+                        selected: false
+                    });
+                }
+                this.selected = selected;
+                this.selected.set({
+                    selected: true
+                });
+                this.trigger('change');
+
+                if(this.postchange) {
+                    this.postchange();
+                }
+            },
+            get: function () {
+                return this.selected;
+            }
+        });
+
+        Controllers.CurrentStatement = new SelectionKeeper(function(){
+            var first_node = this.get().getFirstNode();
+            Controllers.CurrentNode.set(first_node);
+        });
+
+        Controllers.CurrentNode = new SelectionKeeper();
+    });
+
+    App.module("Cursor", function(Cursor, App, Backbone, Marionette, $, _){
+
+        var switchStatement = function(is_valid, change_idx) {
+
+            var current = App.Controllers.CurrentStatement.get();
+            var current_idx = App.Singletons.Statements.indexOf(current);
+
+            if(!is_valid(current_idx)) {
+                return;
+            }
+
+            var new_idx = change_idx(current_idx);
+            var new_one = App.Singletons.Statements.at(new_idx);
+            App.Controllers.CurrentStatement.set(new_one);
+        }
+
+        var switchNode = function(is_valid, change_idx) {
+
+            var current = App.Controllers.CurrentNode.get();
+            var current_idx = App.Singletons.Statements.indexOf(current);
+
+            if(!is_valid(current_idx)) {
+                return;
+            }
+
+            var new_idx = change_idx(current_idx);
+            var new_one = App.Singletons.Statements.at(new_idx);
+            App.Controllers.CurrentStatement.set(new_one);
+        }
+
+        Cursor.nextStatement = function() {
+            switchStatement(function(current_idx){
+                return current_idx < (App.Singletons.Statements.length - 1);
+            }, function(current_idx) {
+                return current_idx + 1;
+            });
+        };
+
+        Cursor.previousStatement = function() {
+            switchStatement(function(current_idx){
+                return current_idx > 0;
+            }, function(current_idx) {
+                return current_idx - 1;
+            });
+        }
+
+        Cursor.nextNode = function() {
+            //FIXME: START HERE!!
+            // switchNode(function(current_idx){
+            //     return current_idx < (App.Singletons.Statements.length - 1);
+            // }, function(current_idx) {
+            //     return current_idx + 1;
+            // });
+        }
+
+        Cursor.previousNode = function() {
+            // switchNode(function(current_idx){
+            //     return current_idx > 0;
+            // }, function(current_idx) {
+            //     return current_idx - 1;
+            // });
+        }
+    });
+
     App.module("Constants", function(Constants, App, Backbone, Marionette, $, _){
         Constants.StatementTypes = {
             RETURN: "RETURN",
@@ -76,7 +176,10 @@ $(function(){
                 type: Backbone.HasOne,
                 key: 'value',
                 relatedModel: Models.StatementNode
-            }]
+            }],
+            getFirstNode: function() {
+                return this.get('symbol');
+            }
         });
 
         Models.MutateStatement = Models.Statement.extend({
@@ -94,7 +197,10 @@ $(function(){
                 type: Backbone.HasMany,
                 key: 'params',
                 relatedModel: Models.StatementNode
-            }]
+            }],
+            getFirstNode: function() {
+                return this.get('symbol');
+            }
         });
 
         Models.Statements = Backbone.Collection.extend({
@@ -113,6 +219,7 @@ $(function(){
     });
 
     App.module("SingletonViews", function(SingletonViews, App, Backbone, Marionette, $, _){
+
         SingletonViews.NewStatementLinks = Backbone.View.extend({
             el: "#new-statement-links",
             events: {
@@ -166,7 +273,24 @@ $(function(){
 
     App.module("Views", function(Views, App, Backbone, Marionette, $, _){
 
-        Views.StatementNode = Backbone.Marionette.ItemView.extend({
+        var selectedClass = function(view) {
+            if(view.model.get('selected')) {
+                view.$el.addClass("selected");
+            } else {
+                view.$el.removeClass("selected");
+            }
+        }
+
+        var ItemView = Backbone.Marionette.ItemView.extend({
+            initialize: function() {
+                this.model.on('change', this.render, this);
+
+                this.postInit();
+            },
+            postInit: $.noop
+        });
+
+        Views.StatementNode = ItemView.extend({
             template: "#statement-node-tmpl",
             tagName: 'span',
             className: 'statement-node',
@@ -181,10 +305,13 @@ $(function(){
                 }, {
                     silent: true
                 });
+            },
+            onRender: function() {
+                selectedClass(this);
             }
         });
 
-        Views.Statement = Backbone.Marionette.ItemView.extend({
+        Views.Statement = ItemView.extend({
             template: function(model) {
                 var selector;
                 switch(model.type) {
@@ -215,6 +342,8 @@ $(function(){
                     }
                     $(this).html(v.render().el);
                 });
+
+                selectedClass(this);
             }
         });
 
@@ -265,6 +394,8 @@ $(function(){
     App.addInitializer(function(options){
         createTestData();
 
+        App.Controllers.CurrentStatement.set(App.Singletons.Statements.at(0));
+
         var v = new App.Views.Statements({
             collection: App.Singletons.Statements
         });
@@ -273,6 +404,25 @@ $(function(){
         new App.SingletonViews.NewStatementLinks();
 
         App.statements.show(v);
+    });
+
+    //Keyboard commands
+    App.addInitializer(function(options){
+        Mousetrap.bind("up", function(){
+            App.Cursor.previousStatement();
+        });
+
+        Mousetrap.bind("down", function(){
+            App.Cursor.nextStatement();
+        });
+
+        Mousetrap.bind("left", function(){
+            App.Cursor.previousNode();
+        });
+
+        Mousetrap.bind("right", function(){
+            App.Cursor.nextNode();
+        });
     });
 
     App.start();
