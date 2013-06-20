@@ -23,16 +23,9 @@
             <div id="stdout"></div>
 		</div>
 
-		<script type="text/html" id="define-statement-tmpl">
-			DEFINE
-			<span class="node" data-field="symbol" />
-			<span class="node" data-field="value" />
-		</script>
-
-		<script type="text/html" id="mutate-statement-tmpl">
-			MUTATE:
-			<span class="node" data-field="symbol" />
-			<span class="node" data-field="params" data-many="true" />
+		<script type="text/html" id="statement-tmpl">
+			<%= type %>
+			<ul class="nodes"></ul>
 		</script>
 
 		<script type="text/html" id="statement-node-tmpl">

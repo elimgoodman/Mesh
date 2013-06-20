@@ -49,8 +49,6 @@ $(function(){
         });
 
         Controllers.CurrentStatement = new SelectionKeeper(function(){
-            var first_node = this.get().getFirstNode();
-            Controllers.CurrentNode.set(first_node);
         });
 
         Controllers.CurrentNode = new SelectionKeeper();
@@ -151,55 +149,25 @@ $(function(){
 
         Models.Statement = Backbone.RelationalModel.extend({
             defaults: {
-                type: null
-            }
+                type: null,
+                nodes: new Models.StatementNodes()
+            },
+            relations: [{
+                type: Backbone.HasMany,
+                key: 'nodes',
+                relatedModel: Models.StatementNode
+            }]
         });
 
         Models.DefineStatement = Models.Statement.extend({
             defaults: {
-                symbol: new App.Models.StatementNode({
-                    type: App.Constants.NodeTypes.SYMBOL
-                }),
-                value: new App.Models.StatementNode({
-                    //FIXME: this isn't gonna work in the long run
-                    //It needs to be something like "EXPR"
-                    type: App.Constants.NodeTypes.INT
-                }),
-                type: App.Constants.StatementTypes.DEFINE,
-            },
-            relations: [{
-                type: Backbone.HasOne,
-                key: 'symbol',
-                relatedModel: Models.StatementNode
-            },
-            {
-                type: Backbone.HasOne,
-                key: 'value',
-                relatedModel: Models.StatementNode
-            }],
-            getFirstNode: function() {
-                return this.get('symbol');
+                type: App.Constants.StatementTypes.DEFINE
             }
         });
 
         Models.MutateStatement = Models.Statement.extend({
             defaults: {
-                symbol: new App.Models.StatementNode(),
-                params: new App.Models.StatementNodes(),
                 type: App.Constants.StatementTypes.MUTATE
-            },
-            relations: [{
-                type: Backbone.HasOne,
-                key: 'symbol',
-                relatedModel: Models.StatementNode
-            },
-            {
-                type: Backbone.HasMany,
-                key: 'params',
-                relatedModel: Models.StatementNode
-            }],
-            getFirstNode: function() {
-                return this.get('symbol');
             }
         });
 
@@ -311,39 +279,17 @@ $(function(){
             }
         });
 
-        Views.Statement = ItemView.extend({
-            template: function(model) {
-                var selector;
-                switch(model.type) {
-                    case App.Constants.StatementTypes.MUTATE:
-                        selector = "#mutate-statement-tmpl";
-                        break;
-                    case App.Constants.StatementTypes.DEFINE:
-                        selector = "#define-statement-tmpl";
-                        break;
-                    default: throw "No template";
-                }
-
-                return _.template($(selector).html(), model);
-            },
+        Views.Statement = Backbone.Marionette.CompositeView.extend({
+            template: "#statement-tmpl",
             className: "statement",
             tagName: "li",
+            itemView: Views.StatementNode,
+            itemViewContainer: ".nodes",
             onRender: function() {
-                //FIXME: this feels INSANELY hacky
-                var self = this;
-                this.$(".node").each(function(){
-                    var field_name = $(this).data('field');
-                    var field = self.model.get(field_name);
-
-                    if($(this).data('many')) {
-                        var v = new App.Views.StatementNodes({collection: field});
-                    } else {
-                        var v = new App.Views.StatementNode({model: field});
-                    }
-                    $(this).html(v.render().el);
-                });
-
                 selectedClass(this);
+            },
+            initialize: function() {
+                this.collection = this.model.get('nodes');
             }
         });
 
@@ -367,27 +313,25 @@ $(function(){
     var createTestData = function() {
 
         App.Singletons.Statements.push(new App.Models.DefineStatement({
-            symbol: new App.Models.StatementNode({
+            nodes: new App.Models.StatementNodes([{
                 type: App.Constants.NodeTypes.SYMBOL,
                 value: "a"
-            }),
-            value: new App.Models.StatementNode({
+            },
+            {
                 type: App.Constants.NodeTypes.INT,
                 value: "1"
-            })
+            }])
         }));
 
         App.Singletons.Statements.push(new App.Models.MutateStatement({
-            symbol: new App.Models.StatementNode({
+            nodes: new App.Models.StatementNodes([{
                 type: App.Constants.NodeTypes.SYMBOL,
                 value: "print"
-            }),
-            params: new App.Models.StatementNodes([
-                {
-                    type: App.Constants.NodeTypes.SYMBOL,
-                    value: "a"
-                }
-            ])
+            },
+            {
+                type: App.Constants.NodeTypes.SYMBOL,
+                value: "a"
+            }])
         }));
     }
 
