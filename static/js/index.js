@@ -241,24 +241,23 @@ $(function(){
 
     App.module("Views", function(Views, App, Backbone, Marionette, $, _){
 
-        var selectedClass = function(view) {
-            if(view.model.get('selected')) {
-                view.$el.addClass("selected");
-            } else {
-                view.$el.removeClass("selected");
+        var Selectable = {
+            onRender: function() {
+                if(this.model.get('selected')) {
+                    this.$el.addClass("selected");
+                } else {
+                    this.$el.removeClass("selected");
+                }
             }
         }
 
-        var ItemView = Backbone.Marionette.ItemView.extend({
+        var RenderOnChange = {
             initialize: function() {
                 this.model.on('change', this.render, this);
+            }
+        };
 
-                this.postInit();
-            },
-            postInit: $.noop
-        });
-
-        Views.StatementNode = ItemView.extend({
+        Views.StatementNode = Backbone.Marionette.ItemView.compose(RenderOnChange, {
             template: "#statement-node-tmpl",
             tagName: 'span',
             className: 'statement-node',
@@ -273,9 +272,6 @@ $(function(){
                 }, {
                     silent: true
                 });
-            },
-            onRender: function() {
-                selectedClass(this);
             }
         });
 
@@ -285,9 +281,6 @@ $(function(){
             tagName: "li",
             itemView: Views.StatementNode,
             itemViewContainer: ".nodes",
-            onRender: function() {
-                selectedClass(this);
-            },
             initialize: function() {
                 this.collection = this.model.get('nodes');
             }
