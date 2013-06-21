@@ -22,13 +22,18 @@ var compose = function(obj, composed) {
 	return composed;
 }
 
-Backbone.Marionette.ItemView.compose = function() {
-	var composed = {};
-	_.each(arguments, function(obj){
-		composed = compose(obj, composed);
-	});
+var composeFn = function(constructor) {
+	return function() {
+		var composed = {};
+		_.each(arguments, function(obj){
+			composed = compose(obj, composed);
+		});
 
-	return Backbone.Marionette.ItemView.extend(composed);
+		return constructor(composed);
+	}
 }
+
+Backbone.Marionette.ItemView.compose = composeFn(_.bind(Backbone.Marionette.ItemView.extend, Backbone.Marionette.ItemView));
+Backbone.Marionette.CompositeView.compose = composeFn(_.bind(Backbone.Marionette.CompositeView.extend, Backbone.Marionette.CompositeView));
 
 })();

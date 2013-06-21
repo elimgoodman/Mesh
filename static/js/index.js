@@ -257,7 +257,7 @@ $(function(){
             }
         };
 
-        Views.StatementNode = Backbone.Marionette.ItemView.compose(RenderOnChange, {
+        Views.StatementNode = Backbone.Marionette.ItemView.compose(Selectable, RenderOnChange, {
             template: "#statement-node-tmpl",
             tagName: 'span',
             className: 'statement-node',
@@ -275,7 +275,7 @@ $(function(){
             }
         });
 
-        Views.Statement = Backbone.Marionette.CompositeView.extend({
+        Views.Statement = Backbone.Marionette.CompositeView.compose(Selectable, RenderOnChange, {
             template: "#statement-tmpl",
             className: "statement",
             tagName: "li",
@@ -345,11 +345,13 @@ $(function(){
 
     //Keyboard commands
     App.addInitializer(function(options){
-        Mousetrap.bind("up", function(){
+        Mousetrap.bind("up", function(e){
+            e.preventDefault();
             App.Cursor.previousStatement();
         });
 
-        Mousetrap.bind("down", function(){
+        Mousetrap.bind("down", function(e){
+            e.preventDefault();
             App.Cursor.nextStatement();
         });
 
