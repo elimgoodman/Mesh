@@ -119,6 +119,10 @@ $(function(){
                 return current_idx - 1;
             });
         }
+
+        Cursor.editCurrentNode = function() {
+            App.Controllers.CurrentNode.get().switchToEditMode();
+        }
     });
 
     App.module("Constants", function(Constants, App, Backbone, Marionette, $, _){
@@ -134,7 +138,12 @@ $(function(){
         Constants.NodeTypes = {
             INT: "INT",
             SYMBOL: "SYMBOL"
-        }
+        };
+
+        Constants.Modes = {
+            NORMAL: "NORMAL",
+            EDIT: "EDIT"
+        };
     });
 
     App.module("Models", function(Models, App, Backbone, Marionette, $, _){
@@ -142,7 +151,14 @@ $(function(){
         Models.StatementNode = Backbone.RelationalModel.extend({
             defaults: {
                 type: null,
-                value: ""
+                value: "",
+                mode: App.Constants.Modes.NORMAL
+            },
+            switchToEditMode: function() {
+                this.set({mode: App.Constants.Modes.EDIT});
+            },
+            switchToNormalMode: function() {
+                this.set({mode: App.Constants.Modes.NORMAL});
             }
         });
 
@@ -265,9 +281,14 @@ $(function(){
             tagName: 'span',
             className: 'statement-node',
             events: {
-                'keyup': 'recordChange'
+                'keyup': 'handleKeyup'
             },
-            recordChange: function(e) {
+            handleKeyup: function(e) {
+                if(e.which == 27) {
+                    this.model.switchToNormalMode();
+                    return;
+                }
+
                 var val = $(e.target).val();
 
                 this.model.set({
@@ -275,6 +296,9 @@ $(function(){
                 }, {
                     silent: true
                 });
+            },
+            onRender: function() {
+                this.$('input').focus();
             }
         });
 
@@ -364,6 +388,10 @@ $(function(){
 
         Mousetrap.bind("right", function(){
             App.Cursor.nextNode();
+        });
+
+        Mousetrap.bind("c", function(){
+            App.Cursor.editCurrentNode();
         });
     });
 

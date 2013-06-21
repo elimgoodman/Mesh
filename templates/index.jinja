@@ -30,7 +30,11 @@
 		</script>
 
 		<script type="text/html" id="statement-node-tmpl">
-			<span><%= value %></span>
+			<% if(mode == "NORMAL") { %>
+				<span><%= value %></span>
+			<% } else { %>
+				<input value="<%= value %>" />
+			<% } %>
 		</script>
 
 		<script type="text/html" id="result-tmpl">
