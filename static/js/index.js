@@ -40,7 +40,7 @@ $(function(){
                 this.trigger('change');
 
                 if(this.postchange) {
-                    this.postchange();
+                    this.postchange(selected);
                 }
             },
             get: function () {
@@ -48,7 +48,9 @@ $(function(){
             }
         });
 
-        Controllers.CurrentStatement = new SelectionKeeper(function(){
+        Controllers.CurrentStatement = new SelectionKeeper(function(statement){
+            var nodes = statement.get("nodes");
+            Controllers.CurrentNode.set(nodes.at(0));
         });
 
         Controllers.CurrentNode = new SelectionKeeper();
@@ -72,16 +74,18 @@ $(function(){
 
         var switchNode = function(is_valid, change_idx) {
 
+            var statement = App.Controllers.CurrentStatement.get();
+            var nodes = statement.get("nodes");
             var current = App.Controllers.CurrentNode.get();
-            var current_idx = App.Singletons.Statements.indexOf(current);
+            var current_idx = nodes.indexOf(current);
 
-            if(!is_valid(current_idx)) {
+            if(!is_valid(current_idx, nodes)) {
                 return;
             }
 
             var new_idx = change_idx(current_idx);
-            var new_one = App.Singletons.Statements.at(new_idx);
-            App.Controllers.CurrentStatement.set(new_one);
+            var new_one = nodes.at(new_idx);
+            App.Controllers.CurrentNode.set(new_one);
         }
 
         Cursor.nextStatement = function() {
@@ -101,20 +105,19 @@ $(function(){
         }
 
         Cursor.nextNode = function() {
-            //FIXME: START HERE!!
-            // switchNode(function(current_idx){
-            //     return current_idx < (App.Singletons.Statements.length - 1);
-            // }, function(current_idx) {
-            //     return current_idx + 1;
-            // });
+            switchNode(function(current_idx, nodes){
+                return current_idx < (nodes.length - 1);
+            }, function(current_idx) {
+                return current_idx + 1;
+            });
         }
 
         Cursor.previousNode = function() {
-            // switchNode(function(current_idx){
-            //     return current_idx > 0;
-            // }, function(current_idx) {
-            //     return current_idx - 1;
-            // });
+            switchNode(function(current_idx, nodes){
+                return current_idx > 0;
+            }, function(current_idx) {
+                return current_idx - 1;
+            });
         }
     });
 
