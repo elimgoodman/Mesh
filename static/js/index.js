@@ -223,6 +223,35 @@ $(function(){
             }],
             isPlaceholder: function() {
                 return this.get("type") == App.Constants.StatementTypes.PLACEHOLDER;
+            },
+            reifyAs: function(type) {
+                var nodes = this.getDefaultNodesForType(type);
+
+                this.set({
+                    type: type
+                });
+
+                this.get("nodes").set(nodes);
+
+                this.trigger('reify');
+            },
+            getDefaultNodesForType: function(type) {
+                var nodes;
+                switch(type) {
+                    case App.Constants.StatementTypes.MUTATE:
+                        nodes = [
+                            {type: App.Constants.NodeTypes.SYMBOL}
+                        ];
+                        break;
+                    case App.Constants.StatementTypes.DEFINE:
+                        nodes = [
+                            {type: App.Constants.NodeTypes.SYMBOL},
+                            {type: App.Constants.NodeTypes.INT}
+                        ];
+                        break;
+                }
+
+                return nodes;
             }
         });
 
@@ -449,14 +478,14 @@ $(function(){
         Mousetrap.bind("m", function(){
             var statement = App.Controllers.CurrentStatement.get();
             if(statement.isPlaceholder()) {
-                statement.set({type: App.Constants.StatementTypes.MUTATE});
+                statement.reifyAs(App.Constants.StatementTypes.MUTATE);
             }
         });
 
         Mousetrap.bind("d", function(){
             var statement = App.Controllers.CurrentStatement.get();
             if(statement.isPlaceholder()) {
-                statement.set({type: App.Constants.StatementTypes.DEFINE});
+                statement.reifyAs(App.Constants.StatementTypes.DEFINE);
             }
         });
     });
