@@ -21,9 +21,9 @@ $(function(){
     });
 
     App.module("Controllers", function(Controllers, App, Backbone, Marionette, $, _){
-        var SelectionKeeper = function (postchange) {
+        var SelectionKeeper = function (change_cb) {
             this.selected = null;
-            this.postchange = postchange;
+            this.change_cb = change_cb;
         };
 
         _.extend(SelectionKeeper.prototype, Backbone.Events, {
@@ -37,20 +37,36 @@ $(function(){
                 this.selected.set({
                     selected: true
                 });
-                this.trigger('change');
-
-                if(this.postchange) {
-                    this.postchange(selected);
-                }
+                this.postChange(selected);
             },
             get: function () {
                 return this.selected;
+            },
+            unset: function() {
+                if(this.selected) {
+                    this.selected.set({
+                        selected: false
+                    });
+                }
+                this.selected = null;
+                this.postChange(null);
+            },
+            postChange: function(selected) {
+                this.trigger('change');
+
+                if(selected && this.change_cb) {
+                    this.change_cb(selected);
+                }
             }
         });
 
         Controllers.CurrentStatement = new SelectionKeeper(function(statement){
-            var nodes = statement.get("nodes");
-            Controllers.CurrentNode.set(nodes.at(0));
+            if(statement.isPlaceholder()) {
+                Controllers.CurrentNode.unset();
+            } else {
+                var nodes = statement.get("nodes");
+                Controllers.CurrentNode.set(nodes.at(0));
+            }
         });
 
         Controllers.CurrentNode = new SelectionKeeper();
@@ -58,10 +74,14 @@ $(function(){
 
     App.module("Cursor", function(Cursor, App, Backbone, Marionette, $, _){
 
+        var getCurrentStatementIndex = function() {
+            var current = App.Controllers.CurrentStatement.get();
+            return App.Singletons.Statements.indexOf(current);
+        }
+
         var switchStatement = function(is_valid, change_idx) {
 
-            var current = App.Controllers.CurrentStatement.get();
-            var current_idx = App.Singletons.Statements.indexOf(current);
+            var current_idx = getCurrentStatementIndex();
 
             if(!is_valid(current_idx)) {
                 return;
@@ -123,6 +143,30 @@ $(function(){
         Cursor.editCurrentNode = function() {
             App.Controllers.CurrentNode.get().switchToEditMode();
         }
+
+        var addStatement = function(idx_xform) {
+            var statement = new App.Models.PlaceholderStatement();
+            var current_idx = getCurrentStatementIndex();
+            App.Singletons.Statements.add(statement, {
+                at: idx_xform(current_idx),
+                silent: true
+            });
+
+            App.Singletons.Statements.trigger('reset');
+            App.Controllers.CurrentStatement.set(statement);
+        }
+
+        Cursor.addStatementAbove = function() {
+            addStatement(function(current_idx) {
+                return current_idx;
+            });
+        };
+
+        Cursor.addStatementBelow = function() {
+            addStatement(function(current_idx) {
+                return current_idx + 1;
+            });
+        };
     });
 
     App.module("Constants", function(Constants, App, Backbone, Marionette, $, _){
@@ -137,7 +181,8 @@ $(function(){
 
         Constants.NodeTypes = {
             INT: "INT",
-            SYMBOL: "SYMBOL"
+            SYMBOL: "SYMBOL",
+            PLACEHOLDER: "PLACEHOLDER"
         };
 
         Constants.Modes = {
@@ -175,7 +220,10 @@ $(function(){
                 type: Backbone.HasMany,
                 key: 'nodes',
                 relatedModel: Models.StatementNode
-            }]
+            }],
+            isPlaceholder: function() {
+                return this.get("type") == App.Constants.StatementTypes.PLACEHOLDER;
+            }
         });
 
         Models.DefineStatement = Models.Statement.extend({
@@ -187,6 +235,12 @@ $(function(){
         Models.MutateStatement = Models.Statement.extend({
             defaults: {
                 type: App.Constants.StatementTypes.MUTATE
+            }
+        });
+
+        Models.PlaceholderStatement = Models.Statement.extend({
+            defaults: {
+                type: App.Constants.StatementTypes.PLACEHOLDER
             }
         });
 
@@ -206,32 +260,6 @@ $(function(){
     });
 
     App.module("SingletonViews", function(SingletonViews, App, Backbone, Marionette, $, _){
-
-        SingletonViews.NewStatementLinks = Backbone.View.extend({
-            el: "#new-statement-links",
-            events: {
-                'click #new-define-statement': 'makeNewDefineStatement',
-                'click #new-print-statement': 'makeNewPrintStatement'
-            },
-            makeNewPrintStatement: function() {
-                var s = new App.Models.MutateStatement({
-                    symbol: new App.Models.StatementNode({
-                        type: App.Constants.NodeTypes.SYMBOL,
-                        value: "print"
-                    }),
-                    params: new App.Models.StatementNodes([{
-                        //FIXME: this ain't right
-                        type: App.Constants.NodeTypes.SYMBOL,
-                        value: ""
-                    }])
-                });
-                App.Singletons.Statements.push(s);
-            },
-            makeNewDefineStatement: function() {
-                var s = new App.Models.DefineStatement();
-                App.Singletons.Statements.push(s);
-            }
-        });
 
         SingletonViews.ExecuteLink = Backbone.View.extend({
             el: "#execute-link",
@@ -298,18 +326,35 @@ $(function(){
                 });
             },
             onRender: function() {
+                //uhh this should probably be conditional?
                 this.$('input').focus();
             }
         });
 
         Views.Statement = Backbone.Marionette.CompositeView.compose(Selectable, RenderOnChange, {
-            template: "#statement-tmpl",
+            template: function(model) {
+                var selector;
+                if(model.type == App.Constants.StatementTypes.PLACEHOLDER) {
+                    selector = "#placeholder-statement-tmpl";
+                } else {
+                    selector = "#statement-tmpl";
+                }
+
+                return _.template($(selector).html(), model);
+            },
             className: "statement",
             tagName: "li",
             itemView: Views.StatementNode,
             itemViewContainer: ".nodes",
             initialize: function() {
                 this.collection = this.model.get('nodes');
+            },
+            onRender: function() {
+                if(this.model.isPlaceholder()) {
+                    this.$el.addClass('placeholder');
+                } else {
+                    this.$el.removeClass('placeholder');
+                }
             }
         });
 
@@ -365,7 +410,6 @@ $(function(){
         });
 
         new App.SingletonViews.ExecuteLink();
-        new App.SingletonViews.NewStatementLinks();
 
         App.statements.show(v);
     });
@@ -392,6 +436,28 @@ $(function(){
 
         Mousetrap.bind("c", function(){
             App.Cursor.editCurrentNode();
+        });
+
+        Mousetrap.bind("o", function(){
+            App.Cursor.addStatementBelow();
+        });
+
+        Mousetrap.bind("O", function(){
+            App.Cursor.addStatementAbove();
+        });
+
+        Mousetrap.bind("m", function(){
+            var statement = App.Controllers.CurrentStatement.get();
+            if(statement.isPlaceholder()) {
+                statement.set({type: App.Constants.StatementTypes.MUTATE});
+            }
+        });
+
+        Mousetrap.bind("d", function(){
+            var statement = App.Controllers.CurrentStatement.get();
+            if(statement.isPlaceholder()) {
+                statement.set({type: App.Constants.StatementTypes.DEFINE});
+            }
         });
     });
 
