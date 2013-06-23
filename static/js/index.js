@@ -20,7 +20,7 @@ $(function(){
         }
     });
 
-    App.module("Controllers", function(Controllers, App, Backbone, Marionette, $, _){
+    App.module("State", function(State, App, Backbone, Marionette, $, _){
         var SelectionKeeper = function (change_cb) {
             this.selected = null;
             this.change_cb = change_cb;
@@ -60,22 +60,52 @@ $(function(){
             }
         });
 
-        Controllers.CurrentStatement = new SelectionKeeper(function(statement){
-            if(statement.isPlaceholder()) {
-                Controllers.CurrentNode.unset();
-            } else {
-                var nodes = statement.get("nodes");
-                Controllers.CurrentNode.set(nodes.at(0));
+        var StateKeeper = function() {
+            this.val = null;
+        };
+
+        _.extend(StateKeeper.prototype, Backbone.Events, {
+            get: function() {
+                return this.val;
+            },
+            set: function(val) {
+                this.val = val;
+                this.trigger('change');
             }
         });
 
-        Controllers.CurrentNode = new SelectionKeeper();
+        State.CurrentStatement = new SelectionKeeper(function(statement){
+            if(statement.isPlaceholder()) {
+                State.CurrentNode.unset();
+            } else {
+                var nodes = statement.get("nodes");
+                State.CurrentNode.set(nodes.at(0));
+            }
+        });
+
+        State.CurrentNode = new SelectionKeeper();
+
+        State.Mode = new StateKeeper();
+    });
+
+    App.module("Controllers", function(Controllers, App, Backbone, Marionette, $, _){
+
+        Controllers.Mode = Backbone.Marionette.Controller.extend({
+            initialize: function() {
+                App.State.Mode.bind('change', this.redrawCurrentNode, this);
+            },
+            redrawCurrentNode: function() {
+                var node = App.State.CurrentNode.get();
+                //FIXME: WTFWTFWTF why is this not retriggering on exiting edit mode???
+                node.trigger('change');
+            }
+        });
     });
 
     App.module("Cursor", function(Cursor, App, Backbone, Marionette, $, _){
 
         var getCurrentStatementIndex = function() {
-            var current = App.Controllers.CurrentStatement.get();
+            var current = App.State.CurrentStatement.get();
             return App.Singletons.Statements.indexOf(current);
         }
 
@@ -89,14 +119,14 @@ $(function(){
 
             var new_idx = change_idx(current_idx);
             var new_one = App.Singletons.Statements.at(new_idx);
-            App.Controllers.CurrentStatement.set(new_one);
+            App.State.CurrentStatement.set(new_one);
         }
 
         var switchNode = function(is_valid, change_idx) {
 
-            var statement = App.Controllers.CurrentStatement.get();
+            var statement = App.State.CurrentStatement.get();
             var nodes = statement.get("nodes");
-            var current = App.Controllers.CurrentNode.get();
+            var current = App.State.CurrentNode.get();
             var current_idx = nodes.indexOf(current);
 
             if(!is_valid(current_idx, nodes)) {
@@ -105,7 +135,7 @@ $(function(){
 
             var new_idx = change_idx(current_idx);
             var new_one = nodes.at(new_idx);
-            App.Controllers.CurrentNode.set(new_one);
+            App.State.CurrentNode.set(new_one);
         }
 
         Cursor.nextStatement = function() {
@@ -140,10 +170,6 @@ $(function(){
             });
         }
 
-        Cursor.editCurrentNode = function() {
-            App.Controllers.CurrentNode.get().switchToEditMode();
-        }
-
         var addStatement = function(idx_xform) {
             var statement = new App.Models.PlaceholderStatement();
             var current_idx = getCurrentStatementIndex();
@@ -153,7 +179,7 @@ $(function(){
             });
 
             App.Singletons.Statements.trigger('reset');
-            App.Controllers.CurrentStatement.set(statement);
+            App.State.CurrentStatement.set(statement);
         }
 
         Cursor.addStatementAbove = function() {
@@ -198,12 +224,6 @@ $(function(){
                 type: null,
                 value: "",
                 mode: App.Constants.Modes.NORMAL
-            },
-            switchToEditMode: function() {
-                this.set({mode: App.Constants.Modes.EDIT});
-            },
-            switchToNormalMode: function() {
-                this.set({mode: App.Constants.Modes.NORMAL});
             }
         });
 
@@ -225,15 +245,14 @@ $(function(){
                 return this.get("type") == App.Constants.StatementTypes.PLACEHOLDER;
             },
             reifyAs: function(type) {
-                var nodes = this.getDefaultNodesForType(type);
-
                 this.set({
                     type: type
                 });
 
+                var nodes = this.getDefaultNodesForType(type);
                 this.get("nodes").set(nodes);
 
-                this.trigger('reify');
+                App.execute('statement_reified', this);
             },
             getDefaultNodesForType: function(type) {
                 var nodes;
@@ -313,6 +332,16 @@ $(function(){
                 });
             }
         });
+
+        SingletonViews.Mode = Backbone.View.extend({
+            el: "#mode",
+            initialize: function() {
+                App.State.Mode.on('change', this.render, this);
+            },
+            render: function() {
+                this.$el.html(App.State.Mode.get());
+            }
+        });
     });
 
     App.module("Views", function(Views, App, Backbone, Marionette, $, _){
@@ -329,21 +358,34 @@ $(function(){
 
         var RenderOnChange = {
             initialize: function() {
-                this.model.on('change', this.render, this);
+                this.model.bind('change', this.render, this);
             }
         };
 
         Views.StatementNode = Backbone.Marionette.ItemView.compose(Selectable, RenderOnChange, {
+            initialize: function() {
+                this.model.bind("all", function(e){
+                    console.log(e);
+                });
+            },
             template: "#statement-node-tmpl",
             tagName: 'span',
             className: 'statement-node',
             events: {
-                'keyup': 'handleKeyup'
+                'keyup input': 'handleKeyup'
             },
             handleKeyup: function(e) {
-                if(e.which == 27) {
-                    this.model.switchToNormalMode();
+                console.log(e.which);
+                if(e.which == 27) { //enter
+
+                    //FIXME: UGLY ASS HACK - event triggering is weird and I don't know why
+                    App.State.Mode.set(App.Constants.Modes.NORMAL);
+                    this.render();
+                    // App.execute('exit_edit_mode');
                     return;
+                } else if (e.which == 9) {
+                    e.preventDefault();
+                    App.execute('next_node');
                 }
 
                 var val = $(e.target).val();
@@ -355,8 +397,13 @@ $(function(){
                 });
             },
             onRender: function() {
-                //uhh this should probably be conditional?
+                //FIXME: uhh this should probably be conditional?
                 this.$('input').focus();
+            },
+            templateHelpers: {
+                isEditMode: function() {
+                    return (App.request('current_mode') == App.Constants.Modes.EDIT);
+                }
             }
         });
 
@@ -432,15 +479,20 @@ $(function(){
     App.addInitializer(function(options){
         createTestData();
 
-        App.Controllers.CurrentStatement.set(App.Singletons.Statements.at(0));
+        App.State.CurrentStatement.set(App.Singletons.Statements.at(0));
 
         var v = new App.Views.Statements({
             collection: App.Singletons.Statements
         });
 
+        //TODO: is there a way to auto-instantiate all of the singletons/controllers?
         new App.SingletonViews.ExecuteLink();
+        new App.SingletonViews.Mode();
+        new App.Controllers.Mode();
 
         App.statements.show(v);
+
+        App.State.Mode.set(App.Constants.Modes.NORMAL);
     });
 
     //Keyboard commands
@@ -460,11 +512,11 @@ $(function(){
         });
 
         Mousetrap.bind("right", function(){
-            App.Cursor.nextNode();
+            App.execute('next_node');
         });
 
         Mousetrap.bind("c", function(){
-            App.Cursor.editCurrentNode();
+            App.State.Mode.set(App.Constants.Modes.EDIT);
         });
 
         Mousetrap.bind("o", function(){
@@ -476,18 +528,37 @@ $(function(){
         });
 
         Mousetrap.bind("m", function(){
-            var statement = App.Controllers.CurrentStatement.get();
+            var statement = App.State.CurrentStatement.get();
             if(statement.isPlaceholder()) {
                 statement.reifyAs(App.Constants.StatementTypes.MUTATE);
             }
         });
 
         Mousetrap.bind("d", function(){
-            var statement = App.Controllers.CurrentStatement.get();
+            var statement = App.State.CurrentStatement.get();
             if(statement.isPlaceholder()) {
                 statement.reifyAs(App.Constants.StatementTypes.DEFINE);
             }
         });
+    });
+
+    //Commands
+    App.commands.setHandler("next_node", function(statement){
+        App.Cursor.nextNode();
+    });
+
+    App.commands.setHandler("exit_edit_mode", function(statement){
+        App.State.Mode.set(App.Constants.Modes.NORMAL);
+    });
+
+    App.commands.setHandler("statement_reified", function(statement){
+        App.State.CurrentStatement.set(statement);
+        App.State.Mode.set(App.Constants.Modes.EDIT);
+    });
+
+    //Req-res
+    App.reqres.setHandler("current_mode", function(){
+        return App.State.Mode.get();
     });
 
     App.start();

@@ -16,6 +16,7 @@
 		<div>
 			<div id="statements"></div>
             <a id="execute-link" href='#'>Execute</a>
+            <div id="mode"></div>
             <div id="stdout"></div>
 		</div>
 
@@ -25,10 +26,10 @@
 		</script>
 
 		<script type="text/html" id="statement-node-tmpl">
-			<% if(mode == "NORMAL") { %>
-				<span><%= value %></span>
-			<% } else { %>
+			<% if(isEditMode()) { %>
 				<input value="<%= value %>" />
+			<% } else { %>
+				<span><%= value %></span>
 			<% } %>
 		</script>
 
