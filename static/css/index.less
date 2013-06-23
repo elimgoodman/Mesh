@@ -31,11 +31,20 @@ li.statement {
 
 	span.statement-node {
 
+		input {
+			border: medium none;
+			font-family: monospace;
+			font-size: 16px;
+		}
+
 		padding: 0 3px;
 
 		&.selected {
-			color: black;
-			background: white;
+			border: 1px white solid;
+
+			&.edit {
+				background: white;
+			}
 		}
 	}
 }

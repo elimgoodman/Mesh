@@ -96,8 +96,7 @@ $(function(){
             },
             redrawCurrentNode: function() {
                 var node = App.State.CurrentNode.get();
-                //FIXME: WTFWTFWTF why is this not retriggering on exiting edit mode???
-                node.trigger('change');
+                node.trigger('mode_change');
             }
         });
     });
@@ -353,6 +352,9 @@ $(function(){
                 } else {
                     this.$el.removeClass("selected");
                 }
+            },
+            defaults: {
+                selected: false
             }
         }
 
@@ -364,41 +366,46 @@ $(function(){
 
         Views.StatementNode = Backbone.Marionette.ItemView.compose(Selectable, RenderOnChange, {
             initialize: function() {
-                this.model.bind("all", function(e){
-                    console.log(e);
-                });
+                this.model.bind("mode_change", this.render, this);
             },
             template: "#statement-node-tmpl",
             tagName: 'span',
             className: 'statement-node',
             events: {
-                'keyup input': 'handleKeyup'
+                'keyup input': 'handleKeyup',
+                'keydown input': 'handleKeydown'
             },
-            handleKeyup: function(e) {
-                console.log(e.which);
-                if(e.which == 27) { //enter
-
-                    //FIXME: UGLY ASS HACK - event triggering is weird and I don't know why
-                    App.State.Mode.set(App.Constants.Modes.NORMAL);
-                    this.render();
-                    // App.execute('exit_edit_mode');
-                    return;
-                } else if (e.which == 9) {
+            handleKeydown: function(e) {
+                if (e.which == 9) {
                     e.preventDefault();
+                    e.stopPropagation();
                     App.execute('next_node');
                 }
+            },
+            handleKeyup: function(e) {
+                if(e.which == 27) { //enter
+                    App.execute('exit_edit_mode');
+                } else {
+                    var val = $(e.target).val();
 
-                var val = $(e.target).val();
+                    this.model.set({
+                        value: val
+                    }, {
+                        silent: true
+                    });
+                }
 
-                this.model.set({
-                    value: val
-                }, {
-                    silent: true
-                });
             },
             onRender: function() {
                 //FIXME: uhh this should probably be conditional?
                 this.$('input').focus();
+
+                var mode = App.request('current_mode');
+                if(mode == App.Constants.Modes.EDIT) {
+                    this.$el.addClass("edit");
+                } else {
+                    this.$el.removeClass("edit");
+                }
             },
             templateHelpers: {
                 isEditMode: function() {
