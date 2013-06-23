@@ -29,14 +29,10 @@ $(function(){
         _.extend(SelectionKeeper.prototype, Backbone.Events, {
             set: function (selected) {
                 if(this.selected) {
-                    this.selected.set({
-                        selected: false
-                    });
+                    this.selected.unselect();
                 }
                 this.selected = selected;
-                this.selected.set({
-                    selected: true
-                });
+                this.selected.select();
                 this.postChange(selected);
             },
             get: function () {
@@ -44,9 +40,7 @@ $(function(){
             },
             unset: function() {
                 if(this.selected) {
-                    this.selected.set({
-                        selected: false
-                    });
+                    this.selected.unselect();
                 }
                 this.selected = null;
                 this.postChange(null);
@@ -181,7 +175,10 @@ $(function(){
         }
 
         var addStatement = function(idx_xform) {
-            var statement = new App.Models.PlaceholderStatement();
+            var statement = new App.Models.Statement({
+                type: App.Constants.StatementTypes.PLACEHOLDER
+            });
+
             var current_idx = getCurrentStatementIndex();
             App.Singletons.Statements.add(statement, {
                 at: idx_xform(current_idx),
@@ -229,7 +226,19 @@ $(function(){
 
     App.module("Models", function(Models, App, Backbone, Marionette, $, _){
 
-        Models.StatementNode = Backbone.RelationalModel.extend({
+        var Selectable = {
+            defaults: {
+                selected: false
+            },
+            select: function() {
+                this.set({selected: true});
+            },
+            unselect: function() {
+                this.set({selected: false});
+            }
+        };
+
+        Models.StatementNode = Backbone.RelationalModel.compose(Selectable, {
             defaults: {
                 type: null,
                 value: "",
@@ -237,19 +246,17 @@ $(function(){
             }
         });
 
-        Models.StatementNodes = Backbone.Collection.extend({
-            model: Models.StatementNode
-        });
-
-        Models.Statement = Backbone.RelationalModel.extend({
+        Models.Statement = Backbone.RelationalModel.compose(Selectable, {
             defaults: {
                 type: null,
-                nodes: new Models.StatementNodes()
             },
             relations: [{
                 type: Backbone.HasMany,
                 key: 'nodes',
-                relatedModel: Models.StatementNode
+                relatedModel: Models.StatementNode,
+                reverseRelation: {
+                    key: 'statement'
+                }
             }],
             isPlaceholder: function() {
                 return this.get("type") == App.Constants.StatementTypes.PLACEHOLDER;
@@ -281,24 +288,6 @@ $(function(){
                 }
 
                 return nodes;
-            }
-        });
-
-        Models.DefineStatement = Models.Statement.extend({
-            defaults: {
-                type: App.Constants.StatementTypes.DEFINE
-            }
-        });
-
-        Models.MutateStatement = Models.Statement.extend({
-            defaults: {
-                type: App.Constants.StatementTypes.MUTATE
-            }
-        });
-
-        Models.PlaceholderStatement = Models.Statement.extend({
-            defaults: {
-                type: App.Constants.StatementTypes.PLACEHOLDER
             }
         });
 
@@ -363,9 +352,6 @@ $(function(){
                 } else {
                     this.$el.removeClass("selected");
                 }
-            },
-            defaults: {
-                selected: false
             }
         }
 
@@ -384,7 +370,8 @@ $(function(){
             className: 'statement-node',
             events: {
                 'keyup input': 'handleKeyup',
-                'keydown input': 'handleKeydown'
+                'keydown input': 'handleKeydown',
+                'click': 'selectNode'
             },
             handleKeydown: function(e) {
                 if (e.which == 9) {
@@ -405,14 +392,20 @@ $(function(){
                         silent: true
                     });
                 }
-
+            },
+            selectNode: function() {
+                App.execute('select_node', this.model);
             },
             onRender: function() {
                 //FIXME: uhh this should probably be conditional?
-                this.$('input').focus();
-
+                var input = this.$('input');
                 var mode = App.request('current_mode');
-                if(mode == App.Constants.Modes.EDIT) {
+                var is_edit_mode = (mode == App.Constants.Modes.EDIT);
+
+                if(is_edit_mode) {
+                    input.focus();
+                    input.select();
+
                     this.$el.addClass("edit");
                 } else {
                     this.$el.removeClass("edit");
@@ -471,27 +464,41 @@ $(function(){
 
     var createTestData = function() {
 
-        App.Singletons.Statements.push(new App.Models.DefineStatement({
-            nodes: new App.Models.StatementNodes([{
-                type: App.Constants.NodeTypes.SYMBOL,
-                value: "a"
-            },
-            {
-                type: App.Constants.NodeTypes.INT,
-                value: "1"
-            }])
-        }));
+        var s1 = new App.Models.Statement({
+            type: "DEFINE"
+        });
 
-        App.Singletons.Statements.push(new App.Models.MutateStatement({
-            nodes: new App.Models.StatementNodes([{
-                type: App.Constants.NodeTypes.SYMBOL,
-                value: "print"
-            },
-            {
-                type: App.Constants.NodeTypes.SYMBOL,
-                value: "a"
-            }])
-        }));
+        var n1 = new App.Models.StatementNode({
+            type: App.Constants.NodeTypes.SYMBOL,
+            value: "a",
+            statement: s1
+        });
+
+        var n2 = new App.Models.StatementNode({
+            type: App.Constants.NodeTypes.INT,
+            value: "1",
+            statement: s1
+        });
+
+        App.Singletons.Statements.push(s1);
+
+        var s2 = new App.Models.Statement({
+            type: "MUTATE"
+        });
+
+        var n3 = new App.Models.StatementNode({
+            type: App.Constants.NodeTypes.SYMBOL,
+            value: "print",
+            statement: s2
+        });
+
+        var n4 = new App.Models.StatementNode({
+            type: App.Constants.NodeTypes.SYMBOL,
+            value: "a",
+            statement: s2
+        });
+
+        App.Singletons.Statements.push(s2);
     }
 
     App.addInitializer(function(options){
@@ -545,6 +552,10 @@ $(function(){
             App.Cursor.addStatementAbove();
         });
 
+        Mousetrap.bind("esc", function(){
+            App.execute('exit_edit_mode');
+        });
+
         Mousetrap.bind("m", function(){
             var statement = App.State.CurrentStatement.get();
             if(statement.isPlaceholder()) {
@@ -567,6 +578,14 @@ $(function(){
 
     App.commands.setHandler("exit_edit_mode", function(statement){
         App.State.Mode.set(App.Constants.Modes.NORMAL);
+    });
+
+    App.commands.setHandler("select_node", function(node){
+        var statement = node.get('statement');
+        App.State.CurrentStatement.set(statement);
+
+        App.State.CurrentNode.set(node);
+        App.State.Mode.set(App.Constants.Modes.EDIT);
     });
 
     App.commands.setHandler("statement_reified", function(statement){
