@@ -112,33 +112,35 @@ $(function(){
 
             var current_idx = getCurrentStatementIndex();
 
-            if(!is_valid(current_idx)) {
-                return;
+            if(is_valid(current_idx)) {
+                var new_idx = change_idx(current_idx);
+                var new_one = App.Singletons.Statements.at(new_idx);
+                App.State.CurrentStatement.set(new_one);
+                return true;
+            } else {
+                return false;
             }
 
-            var new_idx = change_idx(current_idx);
-            var new_one = App.Singletons.Statements.at(new_idx);
-            App.State.CurrentStatement.set(new_one);
         }
 
-        var switchNode = function(is_valid, change_idx) {
+        var switchNode = function(is_valid, change_idx, on_invalid) {
 
             var statement = App.State.CurrentStatement.get();
             var nodes = statement.get("nodes");
             var current = App.State.CurrentNode.get();
             var current_idx = nodes.indexOf(current);
 
-            if(!is_valid(current_idx, nodes)) {
-                return;
+            if(is_valid(current_idx, nodes)) {
+                var new_idx = change_idx(current_idx);
+                var new_one = nodes.at(new_idx);
+                App.State.CurrentNode.set(new_one);
+            } else {
+                on_invalid();
             }
-
-            var new_idx = change_idx(current_idx);
-            var new_one = nodes.at(new_idx);
-            App.State.CurrentNode.set(new_one);
         }
 
         Cursor.nextStatement = function() {
-            switchStatement(function(current_idx){
+            return switchStatement(function(current_idx){
                 return current_idx < (App.Singletons.Statements.length - 1);
             }, function(current_idx) {
                 return current_idx + 1;
@@ -146,7 +148,7 @@ $(function(){
         };
 
         Cursor.previousStatement = function() {
-            switchStatement(function(current_idx){
+            return switchStatement(function(current_idx){
                 return current_idx > 0;
             }, function(current_idx) {
                 return current_idx - 1;
@@ -158,6 +160,8 @@ $(function(){
                 return current_idx < (nodes.length - 1);
             }, function(current_idx) {
                 return current_idx + 1;
+            }, function() {
+                Cursor.nextStatement();
             });
         }
 
@@ -166,6 +170,13 @@ $(function(){
                 return current_idx > 0;
             }, function(current_idx) {
                 return current_idx - 1;
+            }, function() {
+                var success = Cursor.previousStatement();
+
+                if(success) {
+                    var nodes = App.State.CurrentStatement.get().get('nodes');
+                    App.State.CurrentNode.set(nodes.last());
+                }
             });
         }
 
