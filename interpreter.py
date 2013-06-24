@@ -1,29 +1,43 @@
 class Interpreter:
 
+    symbol_table = {}
+    stdout = ""
+
+    def get_symbol_value(self, symbol):
+        return self.symbol_table['symbol']
+
+    def mesh_define(self, nodes):
+        symbol = nodes[0]['value']
+        value  = nodes[1]['value']
+
+        self.symbol_table['symbol'] = value
+
+    def mesh_mutate(self, nodes):
+        if nodes[0]['value'] == "print":
+            self.mesh_print(nodes[1:])
+
+    def mesh_print(self, nodes):
+        symbol = nodes[0]['value']
+        value  = self.get_symbol_value(symbol)
+        self.stdout += str(value)
+
     def interpret(self, code):
         statements = code['statements']
 
-        python_code = ""
-        stdout = ""
         errors = []
 
         for statement in statements:
             type = statement['type']
             nodes = statement['nodes']
-            if type == 'DEFINE':
-                python_code += nodes[0]['value'] + " = " + nodes[1]['value'] + "\n"
-            elif type == 'MUTATE':
-                if nodes[0]['value'] == "print":
-                    python_code += "stdout += str(" + nodes[1]['value'] + ")\n"
 
-        try:
-            exec python_code
-        except:
-            errors.append(str(sys.exc_info()[0]) + ": " + str(sys.exc_info()[1]))
+            if type == 'DEFINE':
+                self.mesh_define(nodes)
+            elif type == 'MUTATE':
+                self.mesh_mutate(nodes)
 
         response = {
             'success': True,
-            'stdout': stdout,
+            'stdout': self.stdout,
             'errors': errors
         }
 
