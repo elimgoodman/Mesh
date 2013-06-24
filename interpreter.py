@@ -1,16 +1,23 @@
 class Interpreter:
 
-    symbol_table = {}
-    stdout = ""
+    def __init__(self):
+        self.symbol_table = {}
+        self.stdout = ""
+        self.errors = []
 
     def get_symbol_value(self, symbol):
-        return self.symbol_table['symbol']
+        try:
+            value = self.symbol_table[symbol]
+            return value
+        except KeyError:
+            self.errors.append('Unknown symbol: ' + symbol)
+            raise
 
     def mesh_define(self, nodes):
         symbol = nodes[0]['value']
         value  = nodes[1]['value']
 
-        self.symbol_table['symbol'] = value
+        self.symbol_table[symbol] = value
 
     def mesh_mutate(self, nodes):
         if nodes[0]['value'] == "print":
@@ -24,21 +31,26 @@ class Interpreter:
     def interpret(self, code):
         statements = code['statements']
 
-        errors = []
-
         for statement in statements:
             type = statement['type']
             nodes = statement['nodes']
 
-            if type == 'DEFINE':
-                self.mesh_define(nodes)
-            elif type == 'MUTATE':
-                self.mesh_mutate(nodes)
+            try:
+                if type == 'DEFINE':
+                    self.mesh_define(nodes)
+                elif type == 'MUTATE':
+                    self.mesh_mutate(nodes)
 
-        response = {
-            'success': True,
-            'stdout': self.stdout,
-            'errors': errors
-        }
+                response = {
+                    'success': True,
+                    'stdout': self.stdout,
+                    'errors': []
+                }
+            except:
+                response = {
+                    'success': False,
+                    'stdout': '',
+                    'errors': self.errors
+                }
 
         return response
