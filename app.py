@@ -18,7 +18,7 @@ def methods():
 			'params': [
 				{
 					'name': 'x',
-					'type': 'Int'
+					'type': 'INT'
 				}
 			]
 		},
@@ -28,11 +28,11 @@ def methods():
 			'params': [
 				{
 					'name': 'x',
-					'type': 'Int'
+					'type': 'INT'
 				},
 				{
 					'name': 'y',
-					'type': 'Int'
+					'type': 'INT'
 				}
 			]
 		}

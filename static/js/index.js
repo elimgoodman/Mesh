@@ -448,6 +448,7 @@ $(function(){
             handleKeydown: function(e) {
                 var code_to_action = {
                     9: "next_node",
+                    13: "use_suggestion",
                     38: "previous_suggestion",
                     40: "next_suggestion"
                 };
@@ -455,7 +456,9 @@ $(function(){
                 if(_.has(code_to_action, e.which)) {
                     e.preventDefault();
                     e.stopPropagation();
-                    App.execute(code_to_action[e.which]);
+
+                    var action = code_to_action[e.which];
+                    App.execute(action);
                 }
             },
             handleKeyup: function(e) {
@@ -689,10 +692,29 @@ $(function(){
         App.Cursor.previousSuggestion();
     });
 
+    App.commands.setHandler("use_suggestion", function(){
+        var node = App.State.CurrentNode.get();
+
+        if(node.get('suggest')) {
+            var statement = node.get('statement');
+            var suggestion = App.State.SelectedSuggestion.get();
+            node.set({value: suggestion.get('symbol')});
+
+            var params = suggestion.get('params');
+            _.each(params, function(param){
+                var new_node = new App.Models.StatementNode({
+                    type: param.type,
+                    statement: statement
+                });
+            });
+
+            App.Cursor.nextNode();
+        }
+    });
+
     App.commands.setHandler("select_suggestion", function(suggestion){
         App.State.SelectedSuggestion.set(suggestion);
     });
-
 
     App.commands.setHandler("statement_reified", function(statement){
         App.State.CurrentStatement.set(statement);
