@@ -78,6 +78,7 @@ $(function(){
         });
 
         State.CurrentNode = new SelectionKeeper();
+        State.SelectedSuggestion = new SelectionKeeper();
 
         State.Mode = new StateKeeper();
     });
@@ -102,20 +103,37 @@ $(function(){
             return App.Singletons.Statements.indexOf(current);
         }
 
-        var switchStatement = function(is_valid, change_idx) {
+        var switchFn = function(current_getter, all_getter) {
+            return function(is_valid, change_idx) {
 
-            var current_idx = getCurrentStatementIndex();
+                var current_state = current_getter();
+                var all = all_getter();
 
-            if(is_valid(current_idx)) {
-                var new_idx = change_idx(current_idx);
-                var new_one = App.Singletons.Statements.at(new_idx);
-                App.State.CurrentStatement.set(new_one);
-                return true;
-            } else {
-                return false;
+                var current = current_state.get();
+                var current_idx = all.indexOf(current);
+
+                if(is_valid(current_idx)) {
+                    var new_idx = change_idx(current_idx);
+                    var new_one = all.at(new_idx);
+                    current_state.set(new_one);
+                    return true;
+                } else {
+                    return false;
+                }
             }
-
         }
+
+        var switchStatement = switchFn(function() {
+            return App.State.CurrentStatement;
+        }, function() {
+            return App.Singletons.Statements;
+        });
+
+        var switchSuggestion = switchFn(function() {
+            return App.State.SelectedSuggestion;
+        }, function() {
+            return App.Singletons.Suggestions;
+        });
 
         var switchNode = function(is_valid, change_idx, on_invalid) {
 
@@ -200,6 +218,22 @@ $(function(){
                 return current_idx + 1;
             });
         };
+
+        Cursor.nextSuggestion = function() {
+            return switchSuggestion(function(current_idx){
+                return current_idx < (App.Singletons.Suggestions.length - 1);
+            }, function(current_idx) {
+                return current_idx + 1;
+            });
+        };
+
+        Cursor.previousSuggestion = function() {
+            return switchSuggestion(function(current_idx){
+                return current_idx > 0;
+            }, function(current_idx) {
+                return current_idx - 1;
+            });
+        };
     });
 
     App.module("Constants", function(Constants, App, Backbone, Marionette, $, _){
@@ -242,7 +276,8 @@ $(function(){
             defaults: {
                 type: null,
                 value: "",
-                mode: App.Constants.Modes.NORMAL
+                mode: App.Constants.Modes.NORMAL,
+                suggest: false
             }
         });
 
@@ -276,7 +311,10 @@ $(function(){
                 switch(type) {
                     case App.Constants.StatementTypes.MUTATE:
                         nodes = [
-                            {type: App.Constants.NodeTypes.SYMBOL}
+                            {
+                                type: App.Constants.NodeTypes.SYMBOL,
+                                suggest: true
+                            }
                         ];
                         break;
                     case App.Constants.StatementTypes.DEFINE:
@@ -300,10 +338,26 @@ $(function(){
                 value: ""
             }
         });
+
+        Models.Suggestion = Backbone.Model.compose(Selectable, {
+            defaults: {
+                symbol: null,
+                params: null
+            }
+        });
+
+        Models.Suggestions = Backbone.Collection.extend({
+            model: Models.Suggestion,
+            url: '/suggestions',
+            parse: function(data) {
+                return data.suggestions;
+            }
+        });
     });
 
     App.module("Singletons", function(Singletons, App, Backbone, Marionette, $, _){
         Singletons.Statements = new App.Models.Statements();
+        Singletons.Suggestions = new App.Models.Suggestions();
     });
 
     App.module("SingletonViews", function(SingletonViews, App, Backbone, Marionette, $, _){
@@ -371,17 +425,41 @@ $(function(){
             events: {
                 'keyup input': 'handleKeyup',
                 'keydown input': 'handleKeydown',
+                'focus input': 'handleFocus',
                 'click': 'selectNode'
             },
+            handleFocus: function(e) {
+
+                if(this.model.get('suggest')) {
+
+                    var suggestions = App.request('get_suggestions');
+                    App.execute('select_suggestion', suggestions.at(0));
+
+                    var v = new App.Views.Suggestions({
+                        collection: suggestions
+                    });
+
+                    //FIXME: can I do this with regions?
+                    var suggestions = this.$('.suggestion-container');
+                    suggestions.html(v.render().el);
+                    suggestions.slideDown(75);
+                }
+            },
             handleKeydown: function(e) {
-                if (e.which == 9) {
+                var code_to_action = {
+                    9: "next_node",
+                    38: "previous_suggestion",
+                    40: "next_suggestion"
+                };
+
+                if(_.has(code_to_action, e.which)) {
                     e.preventDefault();
                     e.stopPropagation();
-                    App.execute('next_node');
+                    App.execute(code_to_action[e.which]);
                 }
             },
             handleKeyup: function(e) {
-                if(e.which == 27) { //enter
+                if(e.which == 27) { //escape
                     App.execute('exit_edit_mode');
                 } else {
                     var val = $(e.target).val();
@@ -460,6 +538,18 @@ $(function(){
         Views.Result = Backbone.Marionette.ItemView.extend({
             template: "#result-tmpl"
         });
+
+        Views.Suggestion = Backbone.Marionette.ItemView.compose(RenderOnChange, Selectable, {
+            tagName: 'li',
+            className: 'suggestion',
+            template: "#suggestion-tmpl"
+        });
+
+        Views.Suggestions = Backbone.Marionette.CollectionView.extend({
+            itemView: Views.Suggestion,
+            tagName: 'ul',
+            className: 'suggestions'
+        });
     });
 
     var createTestData = function() {
@@ -489,7 +579,8 @@ $(function(){
         var n3 = new App.Models.StatementNode({
             type: App.Constants.NodeTypes.SYMBOL,
             value: "print",
-            statement: s2
+            statement: s2,
+            suggest: true
         });
 
         var n4 = new App.Models.StatementNode({
@@ -503,6 +594,8 @@ $(function(){
 
     App.addInitializer(function(options){
         createTestData();
+
+        App.Singletons.Suggestions.fetch();
 
         App.State.CurrentStatement.set(App.Singletons.Statements.at(0));
 
@@ -588,12 +681,29 @@ $(function(){
         App.State.Mode.set(App.Constants.Modes.EDIT);
     });
 
+    App.commands.setHandler("next_suggestion", function(){
+        App.Cursor.nextSuggestion();
+    });
+
+    App.commands.setHandler("previous_suggestion", function(){
+        App.Cursor.previousSuggestion();
+    });
+
+    App.commands.setHandler("select_suggestion", function(suggestion){
+        App.State.SelectedSuggestion.set(suggestion);
+    });
+
+
     App.commands.setHandler("statement_reified", function(statement){
         App.State.CurrentStatement.set(statement);
         App.State.Mode.set(App.Constants.Modes.EDIT);
     });
 
     //Req-res
+    App.reqres.setHandler("get_suggestions", function(){
+        return App.Singletons.Suggestions;
+    });
+
     App.reqres.setHandler("current_mode", function(){
         return App.State.Mode.get();
     });

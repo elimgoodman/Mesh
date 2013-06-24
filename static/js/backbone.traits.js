@@ -35,6 +35,7 @@ var composeFn = function(constructor) {
 
 Backbone.Marionette.ItemView.compose = composeFn(_.bind(Backbone.Marionette.ItemView.extend, Backbone.Marionette.ItemView));
 Backbone.Marionette.CompositeView.compose = composeFn(_.bind(Backbone.Marionette.CompositeView.extend, Backbone.Marionette.CompositeView));
+Backbone.Model.compose = composeFn(_.bind(Backbone.Model.extend, Backbone.Model));
 Backbone.RelationalModel.compose = composeFn(_.bind(Backbone.RelationalModel.extend, Backbone.RelationalModel));
 
 })();

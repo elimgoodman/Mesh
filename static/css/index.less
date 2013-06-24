@@ -23,15 +23,12 @@ li.statement {
 
 	ul.nodes {
 		display: inline;
-
-		li {
-			display: inline;
-		}
 	}
 
 	span.statement-node {
 
 		cursor: pointer;
+		position: relative;
 
 		input {
 			border: medium none;
@@ -46,6 +43,26 @@ li.statement {
 
 			&.edit {
 				background: white;
+			}
+		}
+
+		.suggestion-container {
+			display: none;
+			position: absolute;
+			background: none repeat scroll 0 0 white;
+			box-shadow: 0 2px 2px #999999;
+			color: black;
+			padding: 12px;
+			left: -1px;
+			z-index: 100;
+			position: absolute;
+
+			.suggestion {
+				margin: 6px 0;
+
+				&.selected {
+					font-weight: bold;
+				}
 			}
 		}
 	}

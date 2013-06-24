@@ -8,6 +8,38 @@ app = Flask(__name__)
 def index():
 	return render_template("index.jinja")
 
+#FIXME: placeholder
+@app.route('/suggestions')
+def methods():
+	suggestions = [
+		{
+			'symbol': 'print',
+			'type': 'String',
+			'params': [
+				{
+					'name': 'x',
+					'type': 'Int'
+				}
+			]
+		},
+		{
+			'symbol': 'dummy_method',
+			'type': 'String',
+			'params': [
+				{
+					'name': 'x',
+					'type': 'Int'
+				},
+				{
+					'name': 'y',
+					'type': 'Int'
+				}
+			]
+		}
+	]
+
+	return jsonify(suggestions=suggestions)
+
 @app.route('/execute', methods=["POST"])
 def execute():
     interpreter = Interpreter();
