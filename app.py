@@ -46,7 +46,9 @@ def execute():
     app.logger.debug("execute statement: " + pprint.pformat(request.json))
     interpreter = Interpreter();
     result = interpreter.interpret(request.json);
-    return jsonify(success=result['success'], stdout=result['stdout'], errors=result['errors'])
+    response = jsonify(success=result['success'], stdout=result['stdout'], errors=result['errors'])
+    app.logger.debug("response is: " + pprint.pformat(response.data))
+    return response
 
 @app.route('/saved_programs/<name>', methods=['GET', 'PUT'])
 def saved_programs(name):
