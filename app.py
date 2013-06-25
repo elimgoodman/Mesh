@@ -1,6 +1,7 @@
 from interpreter import Interpreter
 from saved_programs import SavedPrograms
 from flask import Flask, render_template, request, jsonify
+import pprint
 
 app = Flask(__name__)
 
@@ -42,6 +43,7 @@ def methods():
 
 @app.route('/execute', methods=["POST"])
 def execute():
+    app.logger.debug("execute statement: " + pprint.pformat(request.json))
     interpreter = Interpreter();
     result = interpreter.interpret(request.json);
     return jsonify(success=result['success'], stdout=result['stdout'], errors=result['errors'])

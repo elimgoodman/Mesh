@@ -49,7 +49,7 @@ class Interpreter:
         elif node_type == 'INT':
             value = nodes[0]['value']
         else:
-            raise UnhandledMethodError(self, "mesh_print", "a node_type of " + node_type)
+            raise UnhandledMethodError(self, "mesh_print", "a node_type of " + str(node_type))
         self.output += str(value)
 
     def interpret(self, code):
@@ -65,7 +65,7 @@ class Interpreter:
                 elif statement_type == 'MUTATE':
                     self.mesh_mutate(nodes)
                 else:
-                    raise UnhandledMethodError(self, "main", "a statement type of " + statement_type)
+                    raise UnhandledMethodError(self, "main", "a statement type of " + str(statement_type))
 
                 response = {
                     'success': True,
