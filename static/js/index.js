@@ -247,7 +247,7 @@ $(function(){
         };
 
         Constants.NodeTypes = {
-            INT: "INT",
+            EXPR: "EXPR",
             SYMBOL: "SYMBOL",
             PLACEHOLDER: "PLACEHOLDER"
         };
@@ -274,7 +274,8 @@ $(function(){
 
         Models.StatementNode = Backbone.RelationalModel.compose(Selectable, {
             defaults: {
-                type: null,
+                node_type: null,
+                expr_type: null,
                 value: "",
                 mode: App.Constants.Modes.NORMAL,
                 suggest: false
@@ -312,7 +313,8 @@ $(function(){
                     case App.Constants.StatementTypes.MUTATE:
                         nodes = [
                             {
-                                type: App.Constants.NodeTypes.SYMBOL,
+                                node_type: App.Constants.NodeTypes.SYMBOL,
+                                expr_type: "Mutator",
                                 suggest: true
                             }
                         ];
@@ -320,7 +322,10 @@ $(function(){
                     case App.Constants.StatementTypes.DEFINE:
                         nodes = [
                             {type: App.Constants.NodeTypes.SYMBOL},
-                            {type: App.Constants.NodeTypes.INT}
+                            {
+                                node_type: App.Constants.NodeTypes.EXPR
+
+                            }
                         ];
                         break;
                 }
@@ -351,6 +356,13 @@ $(function(){
             url: '/suggestions',
             parse: function(data) {
                 return data.suggestions;
+            },
+            getSuggestionsForType: function(type) {
+                var suggestions = this.filter(function(suggestion) {
+                    return true;
+                });
+
+                return new Models.Suggestions(suggestions);
             }
         });
     });
@@ -435,8 +447,10 @@ $(function(){
                     var suggestions = App.request('get_suggestions');
                     App.execute('select_suggestion', suggestions.at(0));
 
+                    var expr_type = this.model.get('expr_type');
+
                     var v = new App.Views.Suggestions({
-                        collection: suggestions
+                        collection: suggestions.getSuggestionsForType(expr_type)
                     });
 
                     //FIXME: can I do this with regions?
@@ -562,13 +576,13 @@ $(function(){
         });
 
         var n1 = new App.Models.StatementNode({
-            type: App.Constants.NodeTypes.SYMBOL,
+            node_type: App.Constants.NodeTypes.SYMBOL,
             value: "a",
             statement: s1
         });
 
         var n2 = new App.Models.StatementNode({
-            type: App.Constants.NodeTypes.INT,
+            node_type: App.Constants.NodeTypes.EXPR,
             value: "1",
             statement: s1
         });
@@ -580,14 +594,15 @@ $(function(){
         });
 
         var n3 = new App.Models.StatementNode({
-            type: App.Constants.NodeTypes.SYMBOL,
+            node_type: App.Constants.NodeTypes.SYMBOL,
+            expr_type: "Mutator",
             value: "print",
             statement: s2,
             suggest: true
         });
 
         var n4 = new App.Models.StatementNode({
-            type: App.Constants.NodeTypes.SYMBOL,
+            node_type: App.Constants.NodeTypes.SYMBOL,
             value: "a",
             statement: s2
         });
@@ -703,8 +718,10 @@ $(function(){
             var params = suggestion.get('params');
             _.each(params, function(param){
                 var new_node = new App.Models.StatementNode({
-                    type: param.type,
-                    statement: statement
+                    node_type: param.node_type,
+                    expr_type: param.expr_type,
+                    statement: statement,
+                    suggest: true
                 });
             });
 

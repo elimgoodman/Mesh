@@ -19,7 +19,8 @@ def methods():
 			'params': [
 				{
 					'name': 'x',
-					'type': 'INT'
+					'node_type': 'EXPR',
+					'expr_type': 'Int'
 				}
 			]
 		},
@@ -27,14 +28,6 @@ def methods():
 			'symbol': 'dummy_method',
 			'type': 'String',
 			'params': [
-				{
-					'name': 'x',
-					'type': 'INT'
-				},
-				{
-					'name': 'y',
-					'type': 'INT'
-				}
 			]
 		}
 	]
