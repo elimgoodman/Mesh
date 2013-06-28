@@ -8,16 +8,21 @@ $(function(){
     });
 
     App.module("Util", function(Util, App, Backbone, Marionette, $, _){
-        Util.postJson = function(url, obj, success) {
-            $.ajax({
-                type: "POST",
-                contentType: "application/json",
-                url: url,
-                data: JSON.stringify(obj),
-                success: success,
-                dataType: "json"
-            });
+
+        var ajaxJson = function(type) {
+            return function(url, obj, success) {
+                $.ajax({
+                    type: type,
+                    contentType: "application/json",
+                    url: url,
+                    data: JSON.stringify(obj),
+                    success: success,
+                    dataType: "json"
+                });
+            };
         }
+
+        Util.postJson = ajaxJson("POST");
     });
 
     App.module("State", function(State, App, Backbone, Marionette, $, _){
@@ -444,19 +449,20 @@ $(function(){
 
                 if(this.model.get('suggest')) {
 
-                    var suggestions = App.request('get_suggestions');
-                    App.execute('select_suggestion', suggestions.at(0));
+                    var self = this;
+                    var suggestions = App.request('get_suggestions_for_type', this.model.get('expr_type'), function(data){
+                        var suggestions = new App.Models.Suggestions(data.suggestions);
+                        App.execute('select_suggestion', suggestions.at(0));
 
-                    var expr_type = this.model.get('expr_type');
+                        var v = new App.Views.Suggestions({
+                            collection: suggestions
+                        });
 
-                    var v = new App.Views.Suggestions({
-                        collection: suggestions.getSuggestionsForType(expr_type)
-                    });
-
-                    //FIXME: can I do this with regions?
-                    var suggestions = this.$('.suggestion-container');
-                    suggestions.html(v.render().el);
-                    suggestions.slideDown(75);
+                        //FIXME: can I do this with regions?
+                        var suggestions = self.$('.suggestion-container');
+                        suggestions.html(v.render().el);
+                        suggestions.slideDown(75);
+                });
                 }
             },
             handleKeydown: function(e) {
@@ -613,8 +619,6 @@ $(function(){
     App.addInitializer(function(options){
         createTestData();
 
-        App.Singletons.Suggestions.fetch();
-
         App.State.CurrentStatement.set(App.Singletons.Statements.at(0));
 
         var v = new App.Views.Statements({
@@ -739,8 +743,8 @@ $(function(){
     });
 
     //Req-res
-    App.reqres.setHandler("get_suggestions", function(){
-        return App.Singletons.Suggestions;
+    App.reqres.setHandler("get_suggestions_for_type", function(expr_type, success_cb){
+        $.getJSON("/suggestions", {expr_type: expr_type}, success_cb);
     });
 
     App.reqres.setHandler("current_mode", function(){

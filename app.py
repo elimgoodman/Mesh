@@ -11,28 +11,43 @@ def index():
 
 #FIXME: placeholder
 @app.route('/suggestions')
-def methods():
-	suggestions = [
-		{
-			'symbol': 'print',
-			'type': 'String',
-			'params': [
-				{
-					'name': 'x',
-					'node_type': 'EXPR',
-					'expr_type': 'Int'
-				}
-			]
-		},
-		{
-			'symbol': 'dummy_method',
-			'type': 'String',
-			'params': [
-			]
-		}
-	]
+def suggestions():
+	expr_type = request.args['expr_type']
 
-	return jsonify(suggestions=suggestions)
+	suggestions = {
+		'Mutator': [
+			{
+				'symbol': 'print',
+				'type': 'String',
+				'params': [
+					{
+						'name': 'x',
+						'node_type': 'EXPR',
+						'expr_type': 'Int'
+					}
+				]
+			},
+			{
+				'symbol': 'dummy_method',
+				'type': 'String',
+				'params': [
+				]
+			}
+		],
+		'Int': [
+			{
+				'symbol': 'a',
+				'type': 'Int'
+			},
+			{
+				'symbol': 'b',
+				'type': 'Int'
+			}
+		]
+	}
+
+
+	return jsonify(suggestions=suggestions[expr_type])
 
 @app.route('/execute', methods=["POST"])
 def execute():

@@ -42,7 +42,7 @@ class Interpreter:
             self.mesh_print(nodes[1:])
 
     def mesh_print(self, nodes):
-        node_type = nodes[0]['type']
+        node_type = nodes[0]['node_type']
         if node_type == 'SYMBOL':
             symbol = nodes[0]['value']
             value  = self.get_symbol_value(symbol)
