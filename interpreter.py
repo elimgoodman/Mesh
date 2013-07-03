@@ -1,3 +1,5 @@
+import re
+
 class Error(Exception):
     """Base class for exceptions in this module."""
     def __init__(self, interpreter):
@@ -7,6 +9,11 @@ class UndefinedSymbolError(Error):
     def __init__(self, interpreter, symbol):
         Error.__init__(self, interpreter)
         interpreter.add_error('Unknown symbol: ' + symbol)
+
+class UnhandledExpressionError(Error):
+    def __init__(self, interpreter, symbol):
+        Error.__init__(self, expression)
+        interpreter.add_error('I don\'t know how to evaluate this expression: ' + expression)
 
 class UnhandledMethodError(Error):
     """For functionality that we don't know how to handle"""
@@ -31,6 +38,11 @@ class Interpreter:
         except KeyError:
             raise UndefinedSymbolError(self, symbol)
 
+    def evaluate_expression(self, expression):
+        if re.match("\d+", expression):
+            return expression
+        raise UnhandledExpressionError(self, expression)
+
     def mesh_define(self, nodes):
         symbol = nodes[0]['value']
         value  = nodes[1]['value']
@@ -48,6 +60,8 @@ class Interpreter:
             value  = self.get_symbol_value(symbol)
         elif node_type == 'INT':
             value = nodes[0]['value']
+        elif node_type == 'EXPR':
+            value = self.evaluate_expression(nodes[0]['value'])
         else:
             raise UnhandledMethodError(self, "mesh_print", "a node_type of " + str(node_type))
         self.output += str(value)
