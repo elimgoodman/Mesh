@@ -390,15 +390,19 @@ $(function(){
                 };
 
                 App.Util.postJson("/execute", obj, function(data){
-                    var r = new App.Models.Result({
-                        value: data.stdout
-                    });
+                    if (data.success) {
+                        var r = new App.Models.Result({
+                            value: data.stdout
+                        });
 
-                    var v = new App.Views.Result({
-                        model: r
-                    });
+                        var v = new App.Views.Result({
+                            model: r
+                        });
 
-                    App.stdout.show(v);
+                        App.stdout.show(v);
+                    } else {
+                        alert("Execution error: " + data.errors.join("\n"));
+                    }
                 });
             }
         });
