@@ -10,6 +10,11 @@ class UndefinedSymbolError(Error):
         Error.__init__(self, interpreter)
         interpreter.add_error('Unknown symbol: ' + symbol)
 
+class SymbolNameError(Error):
+    def __init__(self, interpreter, symbol, bad_character, verb):
+        Error.__init__(self, interpreter)
+        interpreter.add_error('The symbol "' + symbol + '" isn\'t allowed to ' + verb + ' the character ' + bad_character)
+
 class UnhandledExpressionError(Error):
     def __init__(self, interpreter, symbol):
         Error.__init__(self, expression)
@@ -45,6 +50,13 @@ class Interpreter:
 
     def mesh_define(self, nodes):
         symbol = nodes[0]['value']
+        match = re.search("^[^a-zA-Z_]", symbol)
+        if match:
+            raise SymbolNameError(self, symbol, match.group(0), "start with")
+        match = re.search("[^a-zA-Z_0-9]", symbol)
+        if match:
+            raise SymbolNameError(self, symbol, match.group(0), "contain")
+
         value  = nodes[1]['value']
 
         self.symbol_table[symbol] = value
@@ -86,7 +98,7 @@ class Interpreter:
                     'stdout': self.output,
                     'errors': []
                 }
-            except (UndefinedSymbolError, UnhandledMethodError):
+            except (UndefinedSymbolError, UnhandledMethodError, SymbolNameError):
                 response = {
                     'success': False,
                     'stdout': '',
