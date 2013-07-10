@@ -455,11 +455,11 @@ $(function(){
 
                     var self = this;
                     var suggestions = App.request('get_suggestions_for_type', this.model.get('expr_type'), function(data){
-                        var suggestions = new App.Models.Suggestions(data.suggestions);
-                        App.execute('select_suggestion', suggestions.at(0));
+                        App.Singletons.Suggestions.reset(data.suggestions);
+                        App.execute('select_suggestion', App.Singletons.Suggestions.at(0));
 
                         var v = new App.Views.Suggestions({
-                            collection: suggestions
+                            collection: App.Singletons.Suggestions
                         });
 
                         //FIXME: can I do this with regions?
