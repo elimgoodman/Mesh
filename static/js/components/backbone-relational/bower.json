@@ -1,0 +1,8 @@
+{
+  "name": "backbone-relational",
+  "version": "0.8.5",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/PaulUithol/Backbone-relational.git"
+  }
+}
