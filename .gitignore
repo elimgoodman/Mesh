@@ -1,5 +1,3 @@
-node_modules/
-temp/
-dist/
-*.pyc
 venv
+*.pyc
+static/js/components
