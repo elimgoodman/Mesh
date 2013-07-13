@@ -62,8 +62,9 @@ require([
     App.module("Cursor", function(Cursor, App, Backbone, Marionette, $, _){
 
         var getCurrentStatementIndex = function() {
+            var statements = App.State.CurrentBlock.get().get('statements');
             var current = App.State.CurrentStatement.get();
-            return App.Singletons.Statements.indexOf(current);
+            return statements.indexOf(current);
         }
 
         var switchFn = function(current_getter, all_getter) {
@@ -89,7 +90,7 @@ require([
         var switchStatement = switchFn(function() {
             return App.State.CurrentStatement;
         }, function() {
-            return App.Singletons.Statements;
+            return App.State.CurrentBlock.get().get('statements');
         });
 
         var switchSuggestion = switchFn(function() {
@@ -116,7 +117,8 @@ require([
 
         Cursor.nextStatement = function() {
             return switchStatement(function(current_idx){
-                return current_idx < (App.Singletons.Statements.length - 1);
+                var statements = App.State.CurrentBlock.get().get('statements');
+                return current_idx < (statements.length - 1);
             }, function(current_idx) {
                 return current_idx + 1;
             });
@@ -161,12 +163,13 @@ require([
             });
 
             var current_idx = getCurrentStatementIndex();
-            App.Singletons.Statements.add(statement, {
+            var statements = App.State.CurrentBlock.get().get('statements');
+            statements.add(statement, {
                 at: idx_xform(current_idx),
                 silent: true
             });
 
-            App.Singletons.Statements.trigger('reset');
+            statements.trigger('reset');
             App.State.CurrentStatement.set(statement);
         }
 
@@ -292,6 +295,17 @@ require([
 
         var fn_block = new App.Models.Block({
             type: "FN"
+        });
+
+        var s3 = new App.Models.Statement({
+            type: "RETURN",
+            block: fn_block
+        });
+
+        var n5 = new App.Models.StatementNode({
+            node_type: App.Constants.NodeTypes.EXPR,
+            value: "2",
+            statement: s3
         });
 
         App.Singletons.Blocks.push(fn_block);

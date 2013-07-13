@@ -110,15 +110,12 @@ define(["app"], function(App){
         });
 
         Views.Statement = Backbone.Marionette.CompositeView.compose(Selectable, RenderOnChange, {
-            template: function(model) {
-                var selector;
-                if(model.type == App.Constants.StatementTypes.PLACEHOLDER) {
-                    selector = "#placeholder-statement-tmpl";
+            getTemplate: function() {
+                if(this.model.get('type') == App.Constants.StatementTypes.PLACEHOLDER) {
+                    return "#placeholder-statement-tmpl";
                 } else {
-                    selector = "#statement-tmpl";
+                    return "#statement-tmpl";
                 }
-
-                return _.template($(selector).html(), model);
             },
             className: "statement",
             tagName: "li",
