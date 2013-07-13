@@ -5,7 +5,7 @@
  	</head>
 	<body>
 		<div>
-			<div id="statements"></div>
+			<div id="blocks"></div>
             <a id="execute-link" href='#'>Execute</a>
             <div id="mode"></div>
             <div id="stdout"></div>
@@ -35,6 +35,17 @@
 
 		<script type="text/html" id="suggestion-tmpl">
 			<%= symbol %>
+		</script>
+
+		<script type="text/html" id="block-tmpl">
+			<div class="block-type">
+				<%= type %>
+			</div>
+			<ul class="statements"></ul>
+		</script>
+
+		<script type="text/html" id="foo">
+			content
 		</script>
 	</body>
 </html>

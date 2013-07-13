@@ -2,15 +2,19 @@ define(["app"], function(App){
 
 	App.module("Views", function(Views, App, Backbone, Marionette, $, _){
 
-        var Selectable = {
-            onRender: function() {
-                if(this.model.get('selected')) {
-                    this.$el.addClass("selected");
-                } else {
-                    this.$el.removeClass("selected");
-                }
-            }
-        }
+		var ClassOnAttribute = function(attribute) {
+			return {
+				onRender: function() {
+					if(this.model.get(attribute)) {
+						this.$el.addClass(attribute);
+					} else {
+						this.$el.removeClass(attribute);
+					}
+				}
+			}
+		}
+
+        var Selectable = ClassOnAttribute("selected");
 
         var RenderOnChange = {
             initialize: function() {
@@ -132,9 +136,29 @@ define(["app"], function(App){
             }
         });
 
+        Views.Block = Backbone.Marionette.CompositeView.compose(Selectable, RenderOnChange, {
+            template: "#block-tmpl",
+            className: "block",
+            tagName: "li",
+            itemView: Views.Statement,
+            itemViewContainer: ".statements",
+            initialize: function() {
+                this.collection = this.model.get('statements');
+            },
+            onRender: function() {
+            	this.$el.addClass(this.model.get('type').toLowerCase());
+            }
+       });
+
         Views.Statements = Backbone.Marionette.CollectionView.extend({
             itemView: Views.Statement,
             className: 'statements',
+            tagName: 'ul'
+        });
+
+        Views.Blocks = Backbone.Marionette.CollectionView.extend({
+            itemView: Views.Block,
+            className: 'blocks',
             tagName: 'ul'
         });
 

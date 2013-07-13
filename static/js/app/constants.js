@@ -19,5 +19,10 @@ define(['app'], function(App){
             NORMAL: "NORMAL",
             EDIT: "EDIT"
         };
+
+        Constants.BlockTypes = {
+            MAIN: "MAIN",
+            FN: "FN"
+        };
     });
 });

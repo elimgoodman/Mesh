@@ -9,6 +9,30 @@ ul {
     margin: 0;
 }
 
+li.block {
+	border: 1px solid #ccc;
+	margin: 24px 0;
+
+	.block-type {
+		padding: 6px 12px;
+		text-shadow: 0 1px 1px #333333;
+	}
+
+	&.selected {
+		box-shadow: 0 0px 6px #83DE98;
+		// border: 1px solid #79E0A9;
+	}
+
+	&.main .block-type {
+		background: #5455BA;
+		color: white;
+	}
+
+	&.fn .block-type {
+		background: #60B3BF;
+		color: white;
+	}
+}
 
 li.statement {
 	padding: 6px;

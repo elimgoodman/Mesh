@@ -78,6 +78,24 @@ define(["app", "constants"], function(App){
             model: Models.Statement
         });
 
+        Models.Block = Backbone.RelationalModel.compose(Selectable, {
+            defaults: {
+                type: null
+            },
+            relations: [{
+                type: Backbone.HasMany,
+                key: 'statements',
+                relatedModel: Models.Statement,
+                reverseRelation: {
+                    key: 'block'
+                }
+            }],
+        });
+
+        Models.Blocks = Backbone.Collection.extend({
+            model: Models.Block
+        });
+
         Models.Result = Backbone.Model.extend({
             defaults: {
                 value: ""

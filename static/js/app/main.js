@@ -24,7 +24,7 @@ require([
 	], function($, _, Backbone, Marionette, Relational, Mousetrap, Less, Traits, App) {
 
         App.addRegions({
-            statements: "#statements",
+            blocks: "#blocks",
             stdout: '#stdout'
         });
 
@@ -202,6 +202,7 @@ require([
     App.module("Singletons", function(Singletons, App, Backbone, Marionette, $, _){
         Singletons.Statements = new App.Models.Statements();
         Singletons.Suggestions = new App.Models.Suggestions();
+        Singletons.Blocks = new App.Models.Blocks();
     });
 
     App.module("SingletonViews", function(SingletonViews, App, Backbone, Marionette, $, _){
@@ -247,8 +248,13 @@ require([
 
     var createTestData = function() {
 
+        var main_block = new App.Models.Block({
+            type: "MAIN"
+        });
+
         var s1 = new App.Models.Statement({
-            type: "DEFINE"
+            type: "DEFINE",
+            block: main_block
         });
 
         var n1 = new App.Models.StatementNode({
@@ -263,10 +269,9 @@ require([
             statement: s1
         });
 
-        App.Singletons.Statements.push(s1);
-
         var s2 = new App.Models.Statement({
-            type: "MUTATE"
+            type: "MUTATE",
+            block: main_block
         });
 
         var n3 = new App.Models.StatementNode({
@@ -283,16 +288,22 @@ require([
             statement: s2
         });
 
-        App.Singletons.Statements.push(s2);
+        App.Singletons.Blocks.push(main_block);
+
+        var fn_block = new App.Models.Block({
+            type: "FN"
+        });
+
+        App.Singletons.Blocks.push(fn_block);
     }
 
     App.addInitializer(function(options){
         createTestData();
 
-        App.State.CurrentStatement.set(App.Singletons.Statements.at(0));
+        App.State.CurrentBlock.set(App.Singletons.Blocks.at(0));
 
-        var v = new App.Views.Statements({
-            collection: App.Singletons.Statements
+        var v = new App.Views.Blocks({
+            collection: App.Singletons.Blocks
         });
 
         //TODO: is there a way to auto-instantiate all of the singletons/controllers?
@@ -300,7 +311,7 @@ require([
         new App.SingletonViews.Mode();
         new App.Controllers.Mode();
 
-        App.statements.show(v);
+        App.blocks.show(v);
 
         App.State.Mode.set(App.Constants.Modes.NORMAL);
     });

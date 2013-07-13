@@ -56,6 +56,11 @@ define(["app"], function(App){
             }
         });
 
+        State.CurrentBlock = new SelectionKeeper(function(block){
+        	var statements = block.get("statements");
+        	State.CurrentStatement.set(statements.at(0));
+        });
+
         State.CurrentNode = new SelectionKeeper();
         State.SelectedSuggestion = new SelectionKeeper();
 
