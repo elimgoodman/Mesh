@@ -10,17 +10,20 @@ ul {
 }
 
 li.block {
+	@block-radius: 5px;
+
 	border: 1px solid #ccc;
 	margin: 24px 0;
+	border-radius: @block-radius;
 
 	.block-type {
 		padding: 6px 12px;
 		text-shadow: 0 1px 1px #333333;
+		border-radius: @block-radius @block-radius 0 0;
 	}
 
 	&.selected {
-		box-shadow: 0 0px 6px #83DE98;
-		// border: 1px solid #79E0A9;
+		box-shadow: 0 0px 6px #ccc;
 	}
 
 	&.main .block-type {
