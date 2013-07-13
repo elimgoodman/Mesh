@@ -17,7 +17,8 @@ define(['app'], function(App){
 
         Constants.Modes = {
             NORMAL: "NORMAL",
-            EDIT: "EDIT"
+            EDIT: "EDIT",
+            FN_INFO: "FN_INFO"
         };
 
         Constants.BlockTypes = {

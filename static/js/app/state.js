@@ -20,9 +20,9 @@ define(["app"], function(App){
             unset: function() {
                 if(this.selected) {
                     this.selected.unselect();
+                    this.selected = null;
+                    this.postChange(null);
                 }
-                this.selected = null;
-                this.postChange(null);
             },
             postChange: function(selected) {
                 this.trigger('change');
@@ -54,11 +54,18 @@ define(["app"], function(App){
                 var nodes = statement.get("nodes");
                 State.CurrentNode.set(nodes.at(0));
             }
+
+            State.CurrentFnInfo.unset();
         });
 
         State.CurrentBlock = new SelectionKeeper(function(block){
         	var statements = block.get("statements");
         	State.CurrentStatement.set(statements.at(0));
+        });
+
+        State.CurrentFnInfo = new SelectionKeeper(function(fn_info){
+            State.CurrentStatement.unset();
+            State.CurrentNode.unset();
         });
 
         State.CurrentNode = new SelectionKeeper();

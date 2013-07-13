@@ -55,7 +55,10 @@ require([
             },
             redrawCurrentNode: function() {
                 var node = App.State.CurrentNode.get();
-                node.trigger('mode_change');
+
+                if(node) {
+                    node.trigger('mode_change');
+                }
             }
         });
     });
@@ -367,11 +370,17 @@ require([
     });
 
     App.commands.setHandler("select_block", function(block){
+        App.State.Mode.set(App.Constants.Modes.NORMAL);
         App.State.CurrentBlock.set(block);
     });
 
     App.commands.setHandler("select_suggestion", function(suggestion){
         App.State.SelectedSuggestion.set(suggestion);
+    });
+
+    App.commands.setHandler("focus_on_fn_info", function(fn_info){
+        App.State.Mode.set(App.Constants.Modes.FN_INFO);
+        App.State.CurrentFnInfo.set(fn_info);
     });
 
     App.commands.setHandler("statement_reified", function(statement){

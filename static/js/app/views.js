@@ -133,9 +133,16 @@ define(["app"], function(App){
             }
         });
 
-        Views.FnInfo = Backbone.Marionette.ItemView.extend({
+        Views.FnInfo = Backbone.Marionette.ItemView.compose(Selectable, RenderOnChange, {
             template: "#fn-info-tmpl",
-            className: 'fn-info'
+            className: 'fn-info',
+            events: {
+                'click': 'focusOnInfo'
+            },
+            focusOnInfo: function(e) {
+                e.stopPropagation();
+                App.execute('focus_on_fn_info', this.model);
+            }
         });
 
         Views.Block = Backbone.Marionette.CompositeView.compose(Selectable, RenderOnChange, {

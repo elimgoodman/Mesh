@@ -78,7 +78,7 @@ define(["app", "constants"], function(App){
             model: Models.Statement
         });
 
-        Models.FnInfo = Backbone.RelationalModel.extend({
+        Models.FnInfo = Backbone.RelationalModel.compose(Selectable, {
             defaults: {
                 name: null,
                 takes: null,
