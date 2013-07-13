@@ -44,8 +44,21 @@
 			<ul class="statements"></ul>
 		</script>
 
-		<script type="text/html" id="foo">
-			content
+		<script type="text/html" id="fn-block-tmpl">
+			<div class="block-type">
+				<%= type %>: <%= fn_info.name %>
+			</div>
+			<div class="fn-info-container">
+			</div>
+			<ul class="statements"></ul>
+		</script>
+
+		<script type="text/html" id="fn-info-tmpl">
+			<ul>
+				<li>name: <%= name %></li>
+				<li>takes: <%= takes %></li>
+				<li>returns: <%= returns %></li>
+			</ul>
 		</script>
 	</body>
 </html>

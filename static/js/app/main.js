@@ -17,11 +17,12 @@ require([
 	"components/mousetrap/mousetrap",
 	"components/less.js/dist/less-1.4.1",
 	"lib/backbone.traits",
+    "lib/test_data",
     "app",
     "state",
     "models",
     "views"
-	], function($, _, Backbone, Marionette, Relational, Mousetrap, Less, Traits, App) {
+	], function($, _, Backbone, Marionette, Relational, Mousetrap, Less, Traits, TestData, App) {
 
         App.addRegions({
             blocks: "#blocks",
@@ -203,7 +204,6 @@ require([
     });
 
     App.module("Singletons", function(Singletons, App, Backbone, Marionette, $, _){
-        Singletons.Statements = new App.Models.Statements();
         Singletons.Suggestions = new App.Models.Suggestions();
         Singletons.Blocks = new App.Models.Blocks();
     });
@@ -249,70 +249,8 @@ require([
         });
     });
 
-    var createTestData = function() {
-
-        var main_block = new App.Models.Block({
-            type: "MAIN"
-        });
-
-        var s1 = new App.Models.Statement({
-            type: "DEFINE",
-            block: main_block
-        });
-
-        var n1 = new App.Models.StatementNode({
-            node_type: App.Constants.NodeTypes.SYMBOL,
-            value: "a",
-            statement: s1
-        });
-
-        var n2 = new App.Models.StatementNode({
-            node_type: App.Constants.NodeTypes.EXPR,
-            value: "1",
-            statement: s1
-        });
-
-        var s2 = new App.Models.Statement({
-            type: "MUTATE",
-            block: main_block
-        });
-
-        var n3 = new App.Models.StatementNode({
-            node_type: App.Constants.NodeTypes.SYMBOL,
-            expr_type: "Mutator",
-            value: "print",
-            statement: s2,
-            suggest: true
-        });
-
-        var n4 = new App.Models.StatementNode({
-            node_type: App.Constants.NodeTypes.SYMBOL,
-            value: "a",
-            statement: s2
-        });
-
-        App.Singletons.Blocks.push(main_block);
-
-        var fn_block = new App.Models.Block({
-            type: "FN"
-        });
-
-        var s3 = new App.Models.Statement({
-            type: "RETURN",
-            block: fn_block
-        });
-
-        var n5 = new App.Models.StatementNode({
-            node_type: App.Constants.NodeTypes.EXPR,
-            value: "2",
-            statement: s3
-        });
-
-        App.Singletons.Blocks.push(fn_block);
-    }
-
     App.addInitializer(function(options){
-        createTestData();
+        TestData.createTestData();
 
         App.State.CurrentBlock.set(App.Singletons.Blocks.at(0));
 
@@ -426,6 +364,10 @@ require([
 
             App.Cursor.nextNode();
         }
+    });
+
+    App.commands.setHandler("select_block", function(block){
+        App.State.CurrentBlock.set(block);
     });
 
     App.commands.setHandler("select_suggestion", function(suggestion){

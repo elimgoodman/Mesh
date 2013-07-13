@@ -133,8 +133,19 @@ define(["app"], function(App){
             }
         });
 
+        Views.FnInfo = Backbone.Marionette.ItemView.extend({
+            template: "#fn-info-tmpl",
+            className: 'fn-info'
+        });
+
         Views.Block = Backbone.Marionette.CompositeView.compose(Selectable, RenderOnChange, {
-            template: "#block-tmpl",
+            getTemplate: function() {
+                if(this.model.get('type') == App.Constants.BlockTypes.MAIN) {
+                    return "#block-tmpl";
+                } else {
+                    return "#fn-block-tmpl";
+                }
+            },
             className: "block",
             tagName: "li",
             itemView: Views.Statement,
@@ -144,6 +155,20 @@ define(["app"], function(App){
             },
             onRender: function() {
             	this.$el.addClass(this.model.get('type').toLowerCase());
+
+                if(this.model.get('type') == App.Constants.BlockTypes.FN) {
+                    var v = new Views.FnInfo({
+                        model: this.model.get('fn_info')
+                    });
+
+                    this.$(".fn-info-container").html(v.render().el);
+                }
+            },
+            events: {
+                'click': 'selectBlock'
+            },
+            selectBlock: function() {
+                App.execute('select_block', this.model);
             }
        });
 

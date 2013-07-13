@@ -78,6 +78,14 @@ define(["app", "constants"], function(App){
             model: Models.Statement
         });
 
+        Models.FnInfo = Backbone.RelationalModel.extend({
+            defaults: {
+                name: null,
+                takes: null,
+                returns: null
+            }
+        });
+
         Models.Block = Backbone.RelationalModel.compose(Selectable, {
             defaults: {
                 type: null
@@ -89,7 +97,14 @@ define(["app", "constants"], function(App){
                 reverseRelation: {
                     key: 'block'
                 }
-            }],
+            }, {
+                type: Backbone.HasOne,
+                key: 'fn_info',
+                relatedModel: Models.FnInfo,
+                reverseRelation: {
+                    key: 'block'
+                }
+            }]
         });
 
         Models.Blocks = Backbone.Collection.extend({
