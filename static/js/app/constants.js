@@ -25,5 +25,11 @@ define(['app'], function(App){
             MAIN: "MAIN",
             FN: "FN"
         };
+
+        Constants.FnInfoFieldTypes = {
+            NAME: "NAME",
+            TAKES: "TAKES",
+            RETURNS: "RETURNS"
+        }
     });
 });

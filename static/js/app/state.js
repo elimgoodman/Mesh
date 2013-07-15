@@ -1,18 +1,21 @@
 define(["app"], function(App){
     App.module("State", function(State, App, Backbone, Marionette, $, _){
-        var SelectionKeeper = function (change_cb) {
+        var SelectionKeeper = function (on_set, on_unset) {
             this.selected = null;
-            this.change_cb = change_cb;
+            this.on_set = on_set || $.noop;
+            this.on_unset = on_unset || $.noop;
         };
 
         _.extend(SelectionKeeper.prototype, Backbone.Events, {
             set: function (selected) {
                 if(this.selected) {
                     this.selected.unselect();
+                    this.on_unset(this.selected);
                 }
                 this.selected = selected;
                 this.selected.select();
-                this.postChange(selected);
+                this.on_set(this.selected);
+                this.trigger('change');
             },
             get: function () {
                 return this.selected;
@@ -20,15 +23,9 @@ define(["app"], function(App){
             unset: function() {
                 if(this.selected) {
                     this.selected.unselect();
+                    this.on_unset(this.selected);
                     this.selected = null;
-                    this.postChange(null);
-                }
-            },
-            postChange: function(selected) {
-                this.trigger('change');
-
-                if(selected && this.change_cb) {
-                    this.change_cb(selected);
+                    this.trigger('change');
                 }
             }
         });
@@ -63,10 +60,18 @@ define(["app"], function(App){
         	State.CurrentStatement.set(statements.at(0));
         });
 
+        State.CurrentFnInfoField = new SelectionKeeper();
+
         State.CurrentFnInfo = new SelectionKeeper(function(fn_info){
             State.CurrentStatement.unset();
             State.CurrentNode.unset();
+
+            var field = fn_info.get('fields').at(0);
+            State.CurrentFnInfoField.set(field);
+        }, function(fn_info){
+            State.CurrentFnInfoField.unset();
         });
+
 
         State.CurrentNode = new SelectionKeeper();
         State.SelectedSuggestion = new SelectionKeeper();

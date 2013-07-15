@@ -49,10 +49,19 @@ define(["app"], function(App){
 			});
 
 			var fn_info = new App.Models.FnInfo({
-				name: "returnTwo",
-				takes: null,
-				returns: "Int",
 				block: fn_block
+			});
+
+			var f1 = new App.Models.FnInfoField({
+				type: "RETURNS",
+				value: "Int",
+				info: fn_info
+			});
+
+			var f2 = new App.Models.FnInfoField({
+				type: "NAME",
+				value: "returnTwo",
+				info: fn_info
 			});
 
 			var s3 = new App.Models.Statement({

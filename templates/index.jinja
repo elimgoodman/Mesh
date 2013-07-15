@@ -46,7 +46,7 @@
 
 		<script type="text/html" id="fn-block-tmpl">
 			<div class="block-type">
-				<%= type %>: <%= fn_info.name %>
+				<%= type %>: <%= getFnName() %>
 			</div>
 			<div class="fn-info-container">
 			</div>
@@ -54,11 +54,18 @@
 		</script>
 
 		<script type="text/html" id="fn-info-tmpl">
-			<ul>
-				<li>name: <%= name %></li>
-				<li>takes: <%= takes %></li>
-				<li>returns: <%= returns %></li>
-			</ul>
+			<ul class="fields"></ul>
+		</script>
+
+		<script type="text/html" id="fn-info-field-tmpl">
+			<%= type %>:
+
+			<% if(isFnInfoMode() && selected) { %>
+				<input value="<%= value %>" />
+				<div class="suggestion-container"></div>
+			<% } else { %>
+				<span><%= value %></span>
+			<% } %>
 		</script>
 	</body>
 </html>

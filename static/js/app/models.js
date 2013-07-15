@@ -78,12 +78,22 @@ define(["app", "constants"], function(App){
             model: Models.Statement
         });
 
-        Models.FnInfo = Backbone.RelationalModel.compose(Selectable, {
+        Models.FnInfoField = Backbone.RelationalModel.compose(Selectable, {
             defaults: {
-                name: null,
-                takes: null,
-                returns: null
+                type: null,
+                value: null
             }
+        });
+
+        Models.FnInfo = Backbone.RelationalModel.compose(Selectable, {
+            relations: [{
+                type: Backbone.HasMany,
+                key: 'fields',
+                relatedModel: Models.FnInfoField,
+                reverseRelation: {
+                    key: 'info'
+                }
+            }]
         });
 
         Models.Block = Backbone.RelationalModel.compose(Selectable, {

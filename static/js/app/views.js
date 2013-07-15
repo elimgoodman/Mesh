@@ -1,4 +1,4 @@
-define(["app"], function(App){
+define(["app", "components/underscore/underscore"], function(App, _){
 
 	App.module("Views", function(Views, App, Backbone, Marionette, $, _){
 
@@ -133,8 +133,18 @@ define(["app"], function(App){
             }
         });
 
-        Views.FnInfo = Backbone.Marionette.ItemView.compose(Selectable, RenderOnChange, {
-            template: "#fn-info-tmpl",
+        Views.FnInfoField = Backbone.Marionette.ItemView.compose(Selectable, RenderOnChange, {
+            template: "#fn-info-field-tmpl",
+            className: "fn-info-field",
+            tagName: "li",
+            templateHelpers: {
+                isFnInfoMode: function() {
+                    return (App.request('current_mode') == App.Constants.Modes.FN_INFO);
+                }
+            }
+        });
+
+        Views.FnInfo = Backbone.Marionette.CompositeView.compose(Selectable, RenderOnChange, {
             className: 'fn-info',
             events: {
                 'click': 'focusOnInfo'
@@ -142,6 +152,12 @@ define(["app"], function(App){
             focusOnInfo: function(e) {
                 e.stopPropagation();
                 App.execute('focus_on_fn_info', this.model);
+            },
+            itemView: Views.FnInfoField,
+            itemViewContainer: ".fields",
+            template: "#fn-info-tmpl",
+            initialize: function() {
+                this.collection = this.model.get('fields');
             }
         });
 
@@ -176,6 +192,13 @@ define(["app"], function(App){
             },
             selectBlock: function() {
                 App.execute('select_block', this.model);
+            },
+            templateHelpers: {
+                getFnName: function() {
+                    return _.find(this.fn_info.fields, function(f){
+                        return f.type == App.Constants.FnInfoFieldTypes.NAME;
+                    }).value;
+                }
             }
        });
 

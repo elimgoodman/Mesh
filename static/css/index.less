@@ -9,6 +9,12 @@ ul {
     margin: 0;
 }
 
+input {
+	border: medium none;
+	font-family: monospace;
+	font-size: 16px;
+}
+
 li.block {
 	@block-radius: 5px;
 
@@ -37,14 +43,24 @@ li.block {
 	}
 
 	.fn-info {
-		padding: 6px;
 		border-bottom: 1px solid #ccc;
 		font-style: italic;
 		background: #F7F7F7;
 
-		&.selected {
-			background: black;
-			color: white;
+		// &.selected {
+		// 	background: black;
+		// 	color: white;
+		// }
+
+		.fields {
+			li {
+				padding: 6px;
+
+				&.selected {
+					background: black;
+					color: white;
+				}
+			}
 		}
 	}
 }
@@ -69,12 +85,6 @@ li.statement {
 		cursor: pointer;
 		position: relative;
 		border: 1px white solid;
-
-		input {
-			border: medium none;
-			font-family: monospace;
-			font-size: 16px;
-		}
 
 		padding: 0 3px;
 

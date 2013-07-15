@@ -1,3 +1,5 @@
 venv
 *.pyc
 static/js/components
+*.sublime-workspace
+*.sublime-project
