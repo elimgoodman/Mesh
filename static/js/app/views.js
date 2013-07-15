@@ -2,7 +2,7 @@ define(["app", "components/underscore/underscore"], function(App, _){
 
 	App.module("Views", function(Views, App, Backbone, Marionette, $, _){
 
-		var ClassOnAttribute = function(attribute) {
+		var ConditionalAttribute = function(attribute) {
 			return {
 				onRender: function() {
 					if(this.model.get(attribute)) {
@@ -14,7 +14,7 @@ define(["app", "components/underscore/underscore"], function(App, _){
 			}
 		}
 
-        var Selectable = ClassOnAttribute("selected");
+        var Selectable = ConditionalAttribute("selected");
 
         var RenderOnChange = {
             initialize: function() {
@@ -22,10 +22,13 @@ define(["app", "components/underscore/underscore"], function(App, _){
             }
         };
 
-        Views.StatementNode = Backbone.Marionette.ItemView.compose(Selectable, RenderOnChange, {
+        var RenderOnModeChange = {
             initialize: function() {
                 this.model.bind("mode_change", this.render, this);
-            },
+            }
+        };
+
+        Views.StatementNode = Backbone.Marionette.ItemView.compose(Selectable, RenderOnChange, RenderOnModeChange, {
             template: "#statement-node-tmpl",
             tagName: 'span',
             className: 'statement-node',
@@ -133,7 +136,7 @@ define(["app", "components/underscore/underscore"], function(App, _){
             }
         });
 
-        Views.FnInfoField = Backbone.Marionette.ItemView.compose(Selectable, RenderOnChange, {
+        Views.FnInfoField = Backbone.Marionette.ItemView.compose(Selectable, RenderOnChange, RenderOnModeChange, {
             template: "#fn-info-field-tmpl",
             className: "fn-info-field",
             tagName: "li",

@@ -18,12 +18,12 @@ require([
 	"components/less.js/dist/less-1.4.1",
 	"lib/backbone.traits",
     "lib/test_data",
+    "lib/keyboard",
     "app",
     "state",
     "models",
     "views"
-	], function($, _, Backbone, Marionette, Relational, Mousetrap, Less, Traits, TestData, App) {
-
+	], function($, _, Backbone, Marionette, Relational, Mousetrap, Less, Traits, TestData, Keyboard, App) {
         App.addRegions({
             blocks: "#blocks",
             stdout: '#stdout'
@@ -58,6 +58,12 @@ require([
 
                 if(node) {
                     node.trigger('mode_change');
+                }
+
+                var field = App.State.CurrentFnInfoField.get();
+
+                if(field) {
+                    field.trigger('mode_change');
                 }
             }
         });
@@ -97,6 +103,12 @@ require([
             return App.State.CurrentBlock.get().get('statements');
         });
 
+        var switchFnInfoField = switchFn(function() {
+            return App.State.CurrentFnInfoField;
+        }, function() {
+            return App.State.CurrentFnInfo.get().get('fields');
+        });
+
         var switchSuggestion = switchFn(function() {
             return App.State.SelectedSuggestion;
         }, function() {
@@ -118,6 +130,23 @@ require([
                 on_invalid();
             }
         }
+
+        Cursor.nextFnInfoField = function() {
+            return switchFnInfoField(function(current_idx){
+                var fields = App.State.CurrentFnInfo.get().get('fields');
+                return current_idx < (fields.length - 1);
+            }, function(current_idx) {
+                return current_idx + 1;
+            });
+        };
+
+        Cursor.previousFnInfoField = function() {
+            return switchFnInfoField(function(current_idx){
+                return current_idx > 0;
+            }, function(current_idx) {
+                return current_idx - 1;
+            });
+        };
 
         Cursor.nextStatement = function() {
             return switchStatement(function(current_idx){
@@ -273,15 +302,20 @@ require([
 
     //Keyboard commands
     App.addInitializer(function(options){
-        Mousetrap.bind("up", function(e){
-            e.preventDefault();
-            App.Cursor.previousStatement();
-        });
 
-        Mousetrap.bind("down", function(e){
-            e.preventDefault();
-            App.Cursor.nextStatement();
-        });
+        //NOTE: this is the new sauce way of adding keybindings
+        var keymap = {
+            "up": {
+                NORMAL: App.Cursor.previousStatement,
+                FN_INFO: App.Cursor.previousFnInfoField
+            },
+            "down": {
+                NORMAL: App.Cursor.nextStatement,
+                FN_INFO: App.Cursor.nextFnInfoField
+            }
+        };
+
+        App.Keyboard.bindAll(keymap);
 
         Mousetrap.bind("left", function(){
             App.Cursor.previousNode();
