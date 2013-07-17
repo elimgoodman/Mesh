@@ -338,7 +338,7 @@ require([
         });
 
         Mousetrap.bind("esc", function(){
-            App.execute('exit_edit_mode');
+            App.execute('enter_normal_mode');
         });
 
         Mousetrap.bind("m", function(){
@@ -361,7 +361,7 @@ require([
         App.Cursor.nextNode();
     });
 
-    App.commands.setHandler("exit_edit_mode", function(statement){
+    App.commands.setHandler("enter_normal_mode", function(statement){
         App.State.Mode.set(App.Constants.Modes.NORMAL);
     });
 

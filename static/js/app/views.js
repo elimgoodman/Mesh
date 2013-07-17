@@ -1,4 +1,4 @@
-define(["app", "components/underscore/underscore"], function(App, _){
+define(["app", "constants"], function(App, Constants){
 
 	App.module("Views", function(Views, App, Backbone, Marionette, $, _){
 
@@ -28,12 +28,57 @@ define(["app", "components/underscore/underscore"], function(App, _){
             }
         };
 
-        Views.StatementNode = Backbone.Marionette.ItemView.compose(Selectable, RenderOnChange, RenderOnModeChange, {
+        var TextInput = {
+            handleKeyup: function(e) {
+                if(e.which == 27) { //escape
+                    console.log("H");
+                    App.execute('enter_normal_mode');
+                } else {
+                    var val = $(e.target).val();
+
+                    this.model.set({
+                        value: val
+                    }, {
+                        silent: true
+                    });
+                }
+            },
+            events: {
+                'keyup input': 'handleKeyup'
+            },
+        };
+
+        var SelectOnRenderInMode = function(mode) {
+            return {
+                onRender: function() {
+                    var input = this.$('input');
+                    var current_mode = App.request('current_mode');
+                    var is_correct_mode = (current_mode == mode);
+                    var klass = mode.toLowerCase();
+
+                    if(is_correct_mode) {
+                        input.focus();
+                        input.select();
+
+                        this.$el.addClass(klass);
+                    } else {
+                        this.$el.removeClass(klass);
+                    }
+                }
+            }
+        };
+
+        Views.StatementNode = Backbone.Marionette.ItemView.compose(
+            Selectable,
+            RenderOnChange,
+            SelectOnRenderInMode(App.Constants.Modes.EDIT),
+            TextInput,
+            RenderOnModeChange, {
+
             template: "#statement-node-tmpl",
             tagName: 'span',
             className: 'statement-node',
             events: {
-                'keyup input': 'handleKeyup',
                 'keydown input': 'handleKeydown',
                 'focus input': 'handleFocus',
                 'click': 'selectNode'
@@ -55,7 +100,7 @@ define(["app", "components/underscore/underscore"], function(App, _){
                         var suggestions = self.$('.suggestion-container');
                         suggestions.html(v.render().el);
                         suggestions.slideDown(75);
-                });
+                    });
                 }
             },
             handleKeydown: function(e) {
@@ -74,36 +119,8 @@ define(["app", "components/underscore/underscore"], function(App, _){
                     App.execute(action);
                 }
             },
-            handleKeyup: function(e) {
-                if(e.which == 27) { //escape
-                    App.execute('exit_edit_mode');
-                } else {
-                    var val = $(e.target).val();
-
-                    this.model.set({
-                        value: val
-                    }, {
-                        silent: true
-                    });
-                }
-            },
             selectNode: function() {
                 App.execute('select_node', this.model);
-            },
-            onRender: function() {
-                //FIXME: uhh this should probably be conditional?
-                var input = this.$('input');
-                var mode = App.request('current_mode');
-                var is_edit_mode = (mode == App.Constants.Modes.EDIT);
-
-                if(is_edit_mode) {
-                    input.focus();
-                    input.select();
-
-                    this.$el.addClass("edit");
-                } else {
-                    this.$el.removeClass("edit");
-                }
             },
             templateHelpers: {
                 isEditMode: function() {
@@ -136,7 +153,13 @@ define(["app", "components/underscore/underscore"], function(App, _){
             }
         });
 
-        Views.FnInfoField = Backbone.Marionette.ItemView.compose(Selectable, RenderOnChange, RenderOnModeChange, {
+        Views.FnInfoField = Backbone.Marionette.ItemView.compose(
+            Selectable,
+            RenderOnChange,
+            SelectOnRenderInMode(App.Constants.Modes.FN_INFO),
+            TextInput,
+            RenderOnModeChange, {
+
             template: "#fn-info-field-tmpl",
             className: "fn-info-field",
             tagName: "li",
