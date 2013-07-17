@@ -52,6 +52,24 @@ define(["app"], function(App){
 				block: fn_block
 			});
 
+			var fp = new App.Models.FnInfoField({
+				type: "PARAMS",
+				value: "",
+				info: fn_info
+			});
+
+			var f = new App.Models.FnParam({
+				type: "Int",
+				name: "x",
+				field: fp
+			});
+
+			var f = new App.Models.FnParam({
+				type: "String",
+				name: "y",
+				field: fp
+			});
+
 			var f1 = new App.Models.FnInfoField({
 				type: "RETURNS",
 				value: "Int",

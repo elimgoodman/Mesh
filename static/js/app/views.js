@@ -31,7 +31,6 @@ define(["app", "constants"], function(App, Constants){
         var TextInput = {
             handleKeyup: function(e) {
                 if(e.which == 27) { //escape
-                    console.log("H");
                     App.execute('enter_normal_mode');
                 } else {
                     var val = $(e.target).val();
@@ -153,19 +152,38 @@ define(["app", "constants"], function(App, Constants){
             }
         });
 
-        Views.FnInfoField = Backbone.Marionette.ItemView.compose(
+        Views.FnParam = Backbone.Marionette.ItemView.compose({
+            template: "#fn-param-tmpl",
+            tagName: "li",
+            className: "fn-param"
+        });
+
+        Views.FnInfoField = Backbone.Marionette.CompositeView.compose(
             Selectable,
             RenderOnChange,
             SelectOnRenderInMode(App.Constants.Modes.FN_INFO),
             TextInput,
             RenderOnModeChange, {
 
-            template: "#fn-info-field-tmpl",
+            getTemplate: function() {
+                if(this.model.isParamField()) {
+                    return "#fn-param-field-tmpl";
+                } else {
+                    return "#fn-info-field-tmpl";
+                }
+            },
             className: "fn-info-field",
             tagName: "li",
             templateHelpers: {
                 isFnInfoMode: function() {
                     return (App.request('current_mode') == App.Constants.Modes.FN_INFO);
+                }
+            },
+            itemView: Views.FnParam,
+            itemViewContainer: ".param-container",
+            initialize: function() {
+                if(this.model.isParamField()) {
+                    this.collection = this.model.get('params');
                 }
             }
         });

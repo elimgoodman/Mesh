@@ -78,10 +78,29 @@ define(["app", "constants"], function(App){
             model: Models.Statement
         });
 
+        Models.FnParam = Backbone.RelationalModel.compose(Selectable, {
+            defaults: {
+                type: null,
+                name: null
+            }
+        });
+
+        //FIXME: This is a horrible, horrible hack (params on here)
         Models.FnInfoField = Backbone.RelationalModel.compose(Selectable, {
             defaults: {
                 type: null,
                 value: null
+            },
+            relations: [{
+                type: Backbone.HasMany,
+                key: 'params',
+                relatedModel: Models.FnParam,
+                reverseRelation: {
+                    key: 'field'
+                }
+            }],
+            isParamField: function() {
+                return this.get('type') == "PARAMS";
             }
         });
 

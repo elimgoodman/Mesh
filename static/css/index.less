@@ -59,6 +59,42 @@ li.block {
 				&.selected {
 					background: black;
 					color: white;
+
+					ul.param-container {
+						li {
+
+							span.fn-param-name,
+							span.fn-param-type {
+								border: 1px solid #white;
+							}
+							span.fn-param-name {
+								background: #131313;
+							}
+							span.fn-param-type {
+								background: #171717;
+							}
+						}
+					}
+				}
+
+				ul.param-container {
+					display: inline;
+
+					li {
+
+						span.fn-param-name,
+						span.fn-param-type {
+							border: 1px solid #ccc;
+							padding: 3px;
+						}
+						span.fn-param-name {
+							background: #efefef;
+						}
+						span.fn-param-type {
+							background: #ebebeb;
+						}
+						display: inline;
+					}
 				}
 			}
 		}
