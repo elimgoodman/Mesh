@@ -60,7 +60,13 @@ define(["app"], function(App){
         	State.CurrentStatement.set(statements.at(0));
         });
 
-        State.CurrentFnInfoField = new SelectionKeeper();
+        State.CurrentParam = new SelectionKeeper();
+
+        State.CurrentFnInfoField = new SelectionKeeper(function(info){
+            if(info.isParamField()) {
+                State.CurrentParam.set(info.get('params').at(0));
+            }
+        });
 
         State.CurrentFnInfo = new SelectionKeeper(function(fn_info){
             State.CurrentStatement.unset();

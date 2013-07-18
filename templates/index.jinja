@@ -1,5 +1,6 @@
 <html>
 	<head>
+		<link rel="stylesheet" type="text/css" href="/static/css/effeckt.css" />
 		<link rel="stylesheet/less" type="text/css" href="/static/css/index.less" />
 		<script data-main="static/js/app/main" src="/static/js/app/lib/require.js"></script>
  	</head>
@@ -41,7 +42,7 @@
 			<div class="block-type">
 				<%= type %>
 			</div>
-			<ul class="statements"></ul>
+			<ul class="statements effeckt-list" data-type="pop-in"></ul>
 		</script>
 
 		<script type="text/html" id="fn-block-tmpl">
@@ -50,7 +51,7 @@
 			</div>
 			<div class="fn-info-container">
 			</div>
-			<ul class="statements"></ul>
+			<ul class="statements effeckt-list" data-type="pop-in"></ul>
 		</script>
 
 		<script type="text/html" id="fn-info-tmpl">

@@ -145,6 +145,7 @@ define(["app", "constants"], function(App, Constants){
             },
             onRender: function() {
                 if(this.model.isPlaceholder()) {
+                    this.$el.addClass('new-item');
                     this.$el.addClass('placeholder');
                 } else {
                     this.$el.removeClass('placeholder');
@@ -152,7 +153,7 @@ define(["app", "constants"], function(App, Constants){
             }
         });
 
-        Views.FnParam = Backbone.Marionette.ItemView.compose({
+        Views.FnParam = Backbone.Marionette.ItemView.compose(Selectable, RenderOnChange, {
             template: "#fn-param-tmpl",
             tagName: "li",
             className: "fn-param"
@@ -245,12 +246,6 @@ define(["app", "constants"], function(App, Constants){
                 }
             }
        });
-
-        Views.Statements = Backbone.Marionette.CollectionView.extend({
-            itemView: Views.Statement,
-            className: 'statements',
-            tagName: 'ul'
-        });
 
         Views.Blocks = Backbone.Marionette.CollectionView.extend({
             itemView: Views.Block,
