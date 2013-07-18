@@ -60,12 +60,12 @@ define(["app"], function(App){
         	State.CurrentStatement.set(statements.at(0));
         });
 
-        State.CurrentParam = new SelectionKeeper();
+        State.CurrentToken = new SelectionKeeper(function(t) {
+            console.log(t.get('value'));
+        });
 
         State.CurrentFnInfoField = new SelectionKeeper(function(info){
-            if(info.isParamField()) {
-                State.CurrentParam.set(info.get('params').at(0));
-            }
+            State.CurrentToken.set(info.getTokens().at(0));
         });
 
         State.CurrentFnInfo = new SelectionKeeper(function(fn_info){

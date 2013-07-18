@@ -12,6 +12,13 @@ define(["app", "constants"], function(App){
             }
         };
 
+        var Tokenizable = {
+            getTokens: function() {
+                var tokens = this.generateTokens();
+                return new Models.Tokens(tokens);
+            }
+        }
+
         Models.StatementNode = Backbone.RelationalModel.compose(Selectable, {
             defaults: {
                 node_type: null,
@@ -78,15 +85,34 @@ define(["app", "constants"], function(App){
             model: Models.Statement
         });
 
-        Models.FnParam = Backbone.RelationalModel.compose(Selectable, {
+        Models.Token = Backbone.RelationalModel.compose(Selectable, {
+            defaults: {
+                node_type: null,
+                expr_type: null,
+                value: "",
+                offer_suggestions: false
+            }
+        });
+
+        Models.Tokens = Backbone.Collection.extend({
+            model: Models.Token
+        });
+
+        Models.FnParam = Backbone.RelationalModel.compose(Selectable, Tokenizable, {
             defaults: {
                 type: null,
                 name: null
+            },
+            generateTokens: function() {
+                return [
+                    {value: this.get('name')},
+                    {value: this.get('type')}
+                ];
             }
         });
 
         //FIXME: This is a horrible, horrible hack (params on here)
-        Models.FnInfoField = Backbone.RelationalModel.compose(Selectable, {
+        Models.FnInfoField = Backbone.RelationalModel.compose(Selectable, Tokenizable, {
             defaults: {
                 type: null,
                 value: null
@@ -101,6 +127,20 @@ define(["app", "constants"], function(App){
             }],
             isParamField: function() {
                 return this.get('type') == "PARAMS";
+            },
+            generateTokens: function() {
+                if(this.isParamField()) {
+                    var token_lists = this.get('params').map(function(p){
+                        return p.generateTokens();
+                    });
+                    return _.flatten(token_lists);
+                } else {
+                    return [
+                        {
+                            value: this.get('value')
+                        }
+                    ];
+                }
             }
         });
 
