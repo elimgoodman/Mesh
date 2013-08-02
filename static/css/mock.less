@@ -1,0 +1,119 @@
+body {
+	font-family: monospace;
+	font-size: 16px;
+	padding: 0;
+	margin: 0;
+}
+
+#header {
+	position: absolute;
+	width: 98%;
+	color: white;
+	background: black;
+	padding: 12px;
+	top: 0;
+}
+
+#content {
+	padding: 24px;
+	margin-top: 40px;
+}
+
+@my-border-style: 1px solid #000;
+
+.block {
+	border: @my-border-style;
+	width: 300px;
+
+	.header {
+		padding: 6px;
+		border-bottom: @my-border-style;
+	}
+	.header.main {
+		background: #eaef89
+	}
+
+	.statements {
+		min-height: 12px;
+		background: #eee;
+
+		.statement {
+			padding: 6px;
+
+			.statement-type {
+				font-weight: bold;
+				font-family: Helvetica;
+			}
+
+			.statement-type.io {
+				color: #00237c;
+			}
+
+			.statement-type.define {
+				color: green;
+			}
+
+			.literal {
+				color: #f7931e;
+			}
+
+			.function {
+				color: #3e7f4f;
+			}
+		}
+	}
+}
+
+.message {
+	padding: 18px;
+	background: #1b1e56;
+	color: white;
+	float: left;
+	position: absolute;
+	top: 50%;
+}
+
+#command-bar {
+	position: absolute;
+	padding: 12px;
+	width: 93%;
+	border: @my-border-style;
+	bottom: 12px;
+	background: white;
+	z-index: 100;
+}
+
+typein, reveal {
+	display: none;
+}
+
+.revealed {
+	display: none;
+}
+
+@split-height: 402px;
+
+#split {
+	height: @split-height;
+	left: 655px;
+	position: absolute;
+	top: 50px;
+	width: 600px;
+	border: @my-border-style;
+}
+
+#console {
+	.header {
+		color: white;
+		border-bottom: 3px solid white;
+		padding: 12px;
+		background: #333;
+	}
+
+	.content {
+		padding: 12px;
+	}
+	background: black;
+	color: green;
+	height: @split-height;
+}

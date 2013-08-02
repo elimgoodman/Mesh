@@ -9,6 +9,10 @@ app = Flask(__name__)
 def index():
 	return render_template("index.jinja")
 
+@app.route('/mock')
+def mock():
+	return render_template("mock.jinja")
+
 #FIXME: placeholder
 @app.route('/suggestions')
 def suggestions():

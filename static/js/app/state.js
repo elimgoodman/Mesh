@@ -61,7 +61,6 @@ define(["app"], function(App){
         });
 
         State.CurrentToken = new SelectionKeeper(function(t) {
-            console.log(t.get('value'));
         });
 
         State.CurrentFnInfoField = new SelectionKeeper(function(info){

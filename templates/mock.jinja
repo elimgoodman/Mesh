@@ -1,0 +1,116 @@
+<html>
+	<head>
+		<link rel="stylesheet/less" type="text/css" href="/static/css/mock.less" />
+		<script data-main="static/js/app/mock" src="/static/js/app/lib/require.js"></script>
+	</head>
+	<body>
+		<div id="header">
+			myProject : Project
+		</div>
+		<div id="content">
+			<div class="block">
+				<div class="header main">
+					Main
+				</div>
+				<div class="statements">
+					<div id="first-statement" class="revealed statement">
+						<span class="statement-type io">IO</span>
+						<span class="function">print</span>
+						<span class="literal">"Hello, world!"</span>
+					</div>
+				</div>
+			</div>
+
+			<div id="split" class="revealed">
+				<div id="console" class="revealed">
+					<div class="header">
+						myConsole : Console
+					</div>
+					<div class="content">
+						<div id="hello-world" class="revealed">
+							Hello, world!
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div id="command-bar">
+				&nbsp;
+			</div>
+		</div>
+
+		<div class="message">
+			Hi! Welcome to Mesh. Let's get started with writing a sample program. We're gonna be doing everything the hard way, so you can get a better idea of how the whole thing works.
+		</div>
+
+		<div class="message">
+			The first thing we're gonna do is add a <strong>Statement</strong> to that Main block there.
+		</div>
+
+		<div class="message">
+			We're gonna do that by entering a command into the <strong>command bar</strong> down there at the bottom.
+			<typein>alter Main addStatement (Statement.new :type => StatementType.IO :function => print :args => ["Hello, world!"])</typein>
+		</div>
+
+		<div class="message">
+			What the...? That's a mouthful. Let's pick it apart.
+				<typein>alter Main addStatement (Statement.new :type => StatementType.IO :function => print :args => ["Hello, world!"])</typein>
+		</div>
+
+		<div class="message">
+			The <strong>alter</strong> is telling Mesh that we want to alter something about the current environment (in this case, the list of Statements in our Main block).
+				<typein><strong>alter</strong> Main addStatement (Statement.new :type => StatementType.IO :function => print :args => ["Hello, world!"])</typein>
+		</div>
+
+		<div class="message">
+			The <strong>Main</strong> is telling Mesh which thing it is that we want to alter.
+				<typein>alter <strong>Main</strong> addStatement (Statement.new :type => StatementType.IO :function => print :args => ["Hello, world!"])</typein>
+		</div>
+
+		<div class="message">
+			<strong>addStatement</strong> is the name of the function that we're going to call in order to alter Main.
+				<typein>alter Main <strong>addStatement</strong> (Statement.new :type => StatementType.IO :function => print :args => ["Hello, world!"])</typein>
+		</div>
+		<div class="message">
+			And that last bit is the argument to addStatement - which, in this case, is a new Statement instance.
+				<typein>alter Main addStatement <strong>(Statement.new :type => StatementType.IO :function => print :args => ["Hello, world!"])</strong></typein>
+		</div>
+		<div class="message">
+			OK - now hit enter!
+			<typein>alter Main addStatement (Statement.new :type => StatementType.IO :function => print :args => ["Hello, world!"])</typein>
+		</div>
+
+		<div class="message">
+			Cool!
+			<reveal>#first-statement</reveal>
+		</div>
+
+		<div class="message">
+			Next, we're gonna want to actually run that command. However, to do that, we're going to need a place for its output to show up. Let's make a <strong>console</strong> to show the result of running that command.
+		</div>
+		<div class="message">
+			Another long command. <strong>a!</strong> is a shorthand for alter. <strong>(first @perspectives)</strong> fetches the current <strong>Perspective</strong> (FYI - the <strong>@</strong> in @perspectives indicates that it's a global/mutable/editor-based variable). A perspective is a view onto a part of your program. Currently, in our project, we have just one perspctive. <strong>splitVertically</strong> is the command we want to run on that perspective.
+			<typein>a! (first @perspectives) splitVertically</typein>
+		</div>
+		<div class="message">
+			Bam!
+			<reveal>#split</reveal>
+		</div>
+		<div class="message">
+			Next, we're going to create a new <strong>console Widget</strong> in that pane. The <strong>-></strong> is a helper that lets us chain function calls together without needing so many parentheses.
+			<typein>a! (-> (currentPerspective) getPanes second) setWidget (widgets.Console.new :named => "myConsole"))</typein>
+		</div>
+		<div class="message">
+			Console!
+			<reveal>#console</reveal>
+		</div>
+		<div class="message">
+			And here's the big moment, folks! Let's actually run our Main block.
+			<typein>io! Main.exec :stdout => (widgets.Console.getByName "myConsole")</typein>
+		</div>
+		<div class="message">
+			Victory! All that for a simple "Hello, world!".
+			<reveal>#hello-world</reveal>
+		</div>
+	</body>
+</html>
