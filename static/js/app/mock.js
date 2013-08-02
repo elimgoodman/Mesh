@@ -19,7 +19,7 @@ require([
 	"lib/backbone.traits",
 	], function() {
 
-	var current_step = 9;
+	var current_step = 0;
 	var total_steps = $(".message").length;
 
 	var typeIn = function(text) {
